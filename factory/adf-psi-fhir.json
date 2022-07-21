@@ -1,0 +1,9 @@
+{
+	"name": "adf-psi-fhir",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "844183fb-76e9-4d68-825d-fd8b5cbc3690",
+		"tenantId": "31587ae4-cc1e-4a1b-b675-9ce10022f800"
+	}
+}
