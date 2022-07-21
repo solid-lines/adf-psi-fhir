@@ -4,7 +4,7 @@
 		"annotations": [],
 		"type": "HttpServer",
 		"typeProperties": {
-			"url": "https://fhir-dev.psi-mis.org/fhir",
+			"url": "https://fhir-dev.psi-mis.org/fhir/",
 			"enableServerCertificateValidation": true,
 			"authenticationType": "Anonymous"
 		}
