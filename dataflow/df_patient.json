@@ -1,5 +1,5 @@
 {
-	"name": "dataflow1",
+	"name": "df_patient",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
@@ -12,14 +12,30 @@
 					"name": "srcPatient"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "ls_adls_development",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sinkDevelopmentPatient"
+				}
+			],
 			"transformations": [
 				{
 					"name": "flatten1"
 				},
 				{
-					"name": "MapDrifted1",
-					"description": "Creates an explicit mapping for each drifted column"
+					"name": "flatten2"
+				},
+				{
+					"name": "flattenIdentifier"
+				},
+				{
+					"name": "flattenTelecom"
+				},
+				{
+					"name": "flattenGivenName"
 				}
 			],
 			"scriptLines": [
@@ -40,21 +56,98 @@
 				"     folderPath: 'fhir-dev.psi-mis.org/patient',",
 				"     fileName: '2022-07-21-patient.json',",
 				"     documentForm: 'arrayOfDocuments') ~> srcPatient",
-				"srcPatient foldDown(unroll(entry, entry),",
+				"srcPatient foldDown(unroll(entry),",
 				"     mapColumn(",
 				"          birthDate = entry.resource.birthDate,",
 				"          gender = entry.resource.gender,",
 				"          id = entry.resource.id,",
-				"          nameFamily = entry.resource.name.family,",
-				"          nameGiven = {entry.resource.name.given},",
-				"          telecom = entry.resource.telecom",
+				"          lastUpdated = entry.resource.meta.lastUpdated,",
+				"          name = entry.resource.name,",
+				"          telecom = entry.resource.telecom,",
+				"          identifier = entry.resource.identifier",
 				"     ),",
 				"     skipDuplicateMapInputs: false,",
 				"     skipDuplicateMapOutputs: false) ~> flatten1",
-				"flatten1 derive(birthDate = toDate(byName('birthDate')),",
-				"          gender = toString(byName('gender')),",
-				"          id = toShort(byName('id')),",
-				"          family = toArray(byName('family'))) ~> MapDrifted1"
+				"flatten1 foldDown(unroll(name, name),",
+				"     mapColumn(",
+				"          birthDate,",
+				"          gender,",
+				"          id,",
+				"          lastUpdated,",
+				"          telecom,",
+				"          identifier,",
+				"          familyName = name.family,",
+				"          useName = name.use,",
+				"          givenName = name.given",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flatten2",
+				"flatten2 foldDown(unroll(identifier),",
+				"     mapColumn(",
+				"          birthDate,",
+				"          gender,",
+				"          id,",
+				"          lastUpdated,",
+				"          telecom,",
+				"          familyName,",
+				"          useName,",
+				"          givenName,",
+				"          systemIdentifier = identifier.system,",
+				"          useIdentifier = identifier.use,",
+				"          valueIdentifier = identifier.value",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flattenIdentifier",
+				"flattenIdentifier foldDown(unroll(telecom),",
+				"     mapColumn(",
+				"          birthDate,",
+				"          gender,",
+				"          id,",
+				"          lastUpdated,",
+				"          familyName,",
+				"          useName,",
+				"          givenName,",
+				"          systemIdentifier,",
+				"          useIdentifier,",
+				"          valueIdentifier,",
+				"          systemTelecom = telecom.system,",
+				"          useTelecom = telecom.use,",
+				"          valueTelecom = telecom.value",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flattenTelecom",
+				"flattenTelecom foldDown(unroll(givenName, givenName),",
+				"     mapColumn(",
+				"          birthDate,",
+				"          gender,",
+				"          id,",
+				"          lastUpdated,",
+				"          familyName,",
+				"          useName,",
+				"          systemIdentifier,",
+				"          useIdentifier,",
+				"          valueIdentifier,",
+				"          systemTelecom,",
+				"          useTelecom,",
+				"          valueTelecom,",
+				"          givenName",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flattenGivenName",
+				"flattenGivenName sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'fhir',",
+				"     folderPath: 'fhir-dev.psi-mis.org/patient',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sinkDevelopmentPatient"
 			]
 		}
 	}
