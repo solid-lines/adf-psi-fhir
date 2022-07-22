@@ -1,0 +1,61 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "ls_adls_raw",
+						"type": "LinkedServiceReference"
+					},
+					"name": "srcPatient"
+				}
+			],
+			"sinks": [],
+			"transformations": [
+				{
+					"name": "flatten1"
+				},
+				{
+					"name": "MapDrifted1",
+					"description": "Creates an explicit mapping for each drifted column"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          entry as (fullUrl as string, resource as (active as boolean, birthDate as date, communication as (language as (coding as (code as string, display as string, system as string)[], text as string), preferred as boolean)[], extension as (url as string, valueCodeableConcept as (coding as (code as string, system as string)[]))[], gender as string, id as short, identifier as (period as (start as string), system as string, use as string, value as string)[], meta as (lastUpdated as string, profile as string[], source as string, versionId as boolean), name as (family as string, given as string[], text as string, use as string)[], resourceType as string, telecom as (period as (start as string), system as string, use as string, value as string)[], text as (div as string, status as string)), search as (mode as string))[],",
+				"          id as string,",
+				"          link as (relation as string, url as string)[],",
+				"          meta as (lastUpdated as string),",
+				"          resourceType as string,",
+				"          total as short,",
+				"          type as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'json',",
+				"     fileSystem: 'fhir',",
+				"     folderPath: 'fhir-dev.psi-mis.org/patient',",
+				"     fileName: '2022-07-21-patient.json',",
+				"     documentForm: 'arrayOfDocuments') ~> srcPatient",
+				"srcPatient foldDown(unroll(entry, entry),",
+				"     mapColumn(",
+				"          birthDate = entry.resource.birthDate,",
+				"          gender = entry.resource.gender,",
+				"          id = entry.resource.id,",
+				"          nameFamily = entry.resource.name.family,",
+				"          nameGiven = {entry.resource.name.given},",
+				"          telecom = entry.resource.telecom",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flatten1",
+				"flatten1 derive(birthDate = toDate(byName('birthDate')),",
+				"          gender = toString(byName('gender')),",
+				"          id = toShort(byName('id')),",
+				"          family = toArray(byName('family'))) ~> MapDrifted1"
+			]
+		}
+	}
+}
