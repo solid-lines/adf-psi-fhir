@@ -12,7 +12,15 @@
 					"name": "srcQuestionnaire"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "ls_adls_development",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sinkQuestionnaire"
+				}
+			],
 			"transformations": [
 				{
 					"name": "pivot1"
@@ -22,6 +30,10 @@
 				},
 				{
 					"name": "select1"
+				},
+				{
+					"name": "MapDrifted1",
+					"description": "Creates an explicit mapping for each drifted column"
 				}
 			],
 			"scriptLines": [
@@ -38,7 +50,7 @@
 				"     format: 'json',",
 				"     fileSystem: 'fhir',",
 				"     folderPath: 'fhir-dev.psi-mis.org/questionnaire_response',",
-				"     fileName: 'part-00000-df15616e-7dd7-4ed1-8983-b17a4cbfd156-c000.json',",
+				"     fileName: 'part-00000-8df5ad58-69d5-4d74-998e-187f05187e0b-c000.json',",
 				"     documentForm: 'documentPerLine') ~> srcQuestionnaire",
 				"select1 pivot(groupBy(patientId),",
 				"     pivotBy(item),",
@@ -59,7 +71,34 @@
 				"          value",
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> select1"
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"pivot1 derive({-} = toString(byName('-')),",
+				"          {Action Type} = toString(byName('Action Type')),",
+				"          CTA = toString(byName('CTA')),",
+				"          {Days elapsed} = toString(byName('Days elapsed')),",
+				"          Encounter = toString(byName('Encounter')),",
+				"          {End DateTime} = toString(byName('End DateTime')),",
+				"          {Hours elapsed} = toString(byName('Hours elapsed')),",
+				"          Locale = toString(byName('Locale')),",
+				"          Location = toString(byName('Location')),",
+				"          {Minutes elapsed} = toString(byName('Minutes elapsed')),",
+				"          {Start DateTime} = toString(byName('Start DateTime')),",
+				"          test1 = toString(byName('test1')),",
+				"          test2 = toString(byName('test2'))) ~> MapDrifted1",
+				"MapDrifted1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'fhir',",
+				"     folderPath: 'fhir-dev.psi-mis.org/questionnaire_response',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sinkQuestionnaire"
 			]
 		}
 	}
