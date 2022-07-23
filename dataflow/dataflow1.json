@@ -1,0 +1,66 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "ls_adls_curated",
+						"type": "LinkedServiceReference"
+					},
+					"name": "srcQuestionnaire"
+				}
+			],
+			"sinks": [],
+			"transformations": [
+				{
+					"name": "pivot1"
+				},
+				{
+					"name": "unpivot1"
+				},
+				{
+					"name": "select1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          item as string,",
+				"          patientId as short,",
+				"          valueDateTime as string,",
+				"          valueInteger as string,",
+				"          valueString as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'json',",
+				"     fileSystem: 'fhir',",
+				"     folderPath: 'fhir-dev.psi-mis.org/questionnaire_response',",
+				"     fileName: 'part-00000-df15616e-7dd7-4ed1-8983-b17a4cbfd156-c000.json',",
+				"     documentForm: 'documentPerLine') ~> srcQuestionnaire",
+				"select1 pivot(groupBy(patientId),",
+				"     pivotBy(item),",
+				"     {} = first(value),",
+				"     columnNaming: '$N$V',",
+				"     lateral: true) ~> pivot1",
+				"srcQuestionnaire unpivot(output(",
+				"          valueType as string,",
+				"          value as string",
+				"     ),",
+				"     ungroupBy(patientId,",
+				"          item),",
+				"     lateral: true,",
+				"     ignoreNullPivots: true) ~> unpivot1",
+				"unpivot1 select(mapColumn(",
+				"          patientId,",
+				"          item,",
+				"          value",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1"
+			]
+		}
+	}
+}

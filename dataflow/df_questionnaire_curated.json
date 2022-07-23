@@ -85,11 +85,20 @@
 				"     format: 'json',",
 				"     fileSystem: 'fhir',",
 				"     folderPath: 'fhir-dev.psi-mis.org/questionnaire_response',",
+				"     truncate: true,",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> sinkDLCurated"
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          patientId,",
+				"          item,",
+				"          valueBoolean = answer.valueBoolean,",
+				"          valueDateTime = answer.valueDateTime,",
+				"          valueInteger = answer.valueInteger,",
+				"          valueString = answer.valueString",
+				"     )) ~> sinkDLCurated"
 			]
 		}
 	}
