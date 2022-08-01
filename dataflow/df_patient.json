@@ -143,7 +143,7 @@
 				"     columnDelimiter: ',',",
 				"     escapeChar: '\\\\',",
 				"     quoteChar: '\\\"',",
-				"     columnNamesAsHeader: false,",
+				"     columnNamesAsHeader: true,",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
