@@ -16,7 +16,7 @@
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"fileName": {
-					"value": "@concat(dataset().date,'-patient.csv')",
+					"value": "@concat(dataset().date,'-patient.json')",
 					"type": "Expression"
 				},
 				"folderPath": "fhir-dev.psi-mis.org/patient",

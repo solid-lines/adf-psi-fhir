@@ -10,7 +10,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "HttpServerLocation",
-				"relativeUrl": "Patient"
+				"relativeUrl": "Patient?_count=100"
 			}
 		},
 		"schema": {}
