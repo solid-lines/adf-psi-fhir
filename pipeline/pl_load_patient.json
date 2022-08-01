@@ -20,6 +20,8 @@
 						"storeSettings": {
 							"type": "AzureBlobFSReadSettings",
 							"recursive": true,
+							"wildcardFolderPath": "fhir-dev.psi-mis.org/patient",
+							"wildcardFileName": "*.csv",
 							"enablePartitionDiscovery": false
 						},
 						"formatSettings": {
@@ -28,7 +30,7 @@
 					},
 					"sink": {
 						"type": "AzureSqlSink",
-						"preCopyScript": "delete * from patient",
+						"preCopyScript": "delete from patient",
 						"writeBehavior": "insert",
 						"sqlWriterUseTableLock": false,
 						"disableMetricsCollection": false
@@ -86,6 +88,11 @@
 								}
 							},
 							{
+								"source": {
+									"name": "urn:facebook",
+									"type": "String",
+									"physicalType": "String"
+								},
 								"sink": {
 									"name": "urn:facebook",
 									"type": "Boolean",
@@ -93,6 +100,11 @@
 								}
 							},
 							{
+								"source": {
+									"name": "urn:zalo",
+									"type": "String",
+									"physicalType": "String"
+								},
 								"sink": {
 									"name": "urn:zalo",
 									"type": "Boolean",
@@ -100,6 +112,11 @@
 								}
 							},
 							{
+								"source": {
+									"name": "urn:google",
+									"type": "String",
+									"physicalType": "String"
+								},
 								"sink": {
 									"name": "urn:google",
 									"type": "Boolean",
@@ -107,6 +124,11 @@
 								}
 							},
 							{
+								"source": {
+									"name": "telecomPeriod",
+									"type": "String",
+									"physicalType": "String"
+								},
 								"sink": {
 									"name": "telecomPeriod",
 									"type": "String",
@@ -114,6 +136,11 @@
 								}
 							},
 							{
+								"source": {
+									"name": "telecomSystem",
+									"type": "String",
+									"physicalType": "String"
+								},
 								"sink": {
 									"name": "telecomSystem",
 									"type": "String",
@@ -121,6 +148,11 @@
 								}
 							},
 							{
+								"source": {
+									"name": "telecomUse",
+									"type": "String",
+									"physicalType": "String"
+								},
 								"sink": {
 									"name": "telecomUse",
 									"type": "String",
@@ -128,6 +160,11 @@
 								}
 							},
 							{
+								"source": {
+									"name": "telecomValue",
+									"type": "String",
+									"physicalType": "String"
+								},
 								"sink": {
 									"name": "telecomValue",
 									"type": "String",
