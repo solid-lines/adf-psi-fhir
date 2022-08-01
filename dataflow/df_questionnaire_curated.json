@@ -69,7 +69,7 @@
 				"     mapColumn(",
 				"          type,",
 				"          patientId,",
-				"          item = item,",
+				"          item,",
 				"          lastUpdated,",
 				"          id",
 				"     ),",
@@ -102,7 +102,9 @@
 				"          valueBoolean = answer.valueBoolean,",
 				"          valueDateTime = answer.valueDateTime,",
 				"          valueInteger = answer.valueInteger,",
-				"          valueString = answer.valueString",
+				"          valueString = answer.valueString,",
+				"          lastUpdated,",
+				"          id",
 				"     )) ~> sinkDLCurated"
 			]
 		}
