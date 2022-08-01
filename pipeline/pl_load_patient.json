@@ -39,7 +39,7 @@
 						"mappings": [
 							{
 								"source": {
-									"name": "1990-02-23",
+									"name": "id",
 									"type": "String",
 									"physicalType": "String"
 								},
@@ -51,7 +51,7 @@
 							},
 							{
 								"source": {
-									"name": "male",
+									"name": "birthDate",
 									"type": "String",
 									"physicalType": "String"
 								},
@@ -63,7 +63,7 @@
 							},
 							{
 								"source": {
-									"name": "1",
+									"name": "gender",
 									"type": "String",
 									"physicalType": "String"
 								},
@@ -75,7 +75,7 @@
 							},
 							{
 								"source": {
-									"name": "2022-04-16T06:32:54.33+00:00",
+									"name": "lastUpdated",
 									"type": "String",
 									"physicalType": "String"
 								},
@@ -86,11 +86,6 @@
 								}
 							},
 							{
-								"source": {
-									"name": "Tester",
-									"type": "String",
-									"physicalType": "String"
-								},
 								"sink": {
 									"name": "urn:facebook",
 									"type": "Boolean",
@@ -98,11 +93,6 @@
 								}
 							},
 							{
-								"source": {
-									"name": "official",
-									"type": "String",
-									"physicalType": "String"
-								},
 								"sink": {
 									"name": "urn:zalo",
 									"type": "Boolean",
@@ -110,11 +100,6 @@
 								}
 							},
 							{
-								"source": {
-									"name": "Prop_6",
-									"type": "String",
-									"physicalType": "String"
-								},
 								"sink": {
 									"name": "urn:google",
 									"type": "Boolean",
@@ -122,11 +107,6 @@
 								}
 							},
 							{
-								"source": {
-									"name": "Prop_7",
-									"type": "String",
-									"physicalType": "String"
-								},
 								"sink": {
 									"name": "telecomPeriod",
 									"type": "String",
@@ -134,11 +114,6 @@
 								}
 							},
 							{
-								"source": {
-									"name": "Prop_8",
-									"type": "String",
-									"physicalType": "String"
-								},
 								"sink": {
 									"name": "telecomSystem",
 									"type": "String",
@@ -146,11 +121,6 @@
 								}
 							},
 							{
-								"source": {
-									"name": "Prop_9",
-									"type": "String",
-									"physicalType": "String"
-								},
 								"sink": {
 									"name": "telecomUse",
 									"type": "String",
@@ -158,11 +128,6 @@
 								}
 							},
 							{
-								"source": {
-									"name": "Prop_10",
-									"type": "String",
-									"physicalType": "String"
-								},
 								"sink": {
 									"name": "telecomValue",
 									"type": "String",
