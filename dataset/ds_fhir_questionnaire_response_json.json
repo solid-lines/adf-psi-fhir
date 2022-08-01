@@ -10,7 +10,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "HttpServerLocation",
-				"relativeUrl": "QuestionnaireResponse"
+				"relativeUrl": "QuestionnaireResponse?_count=200"
 			}
 		},
 		"schema": {}
