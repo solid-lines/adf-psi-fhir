@@ -18,7 +18,7 @@
 						"referenceName": "ls_adls_curated",
 						"type": "LinkedServiceReference"
 					},
-					"name": "sinkDLCurated"
+					"name": "sinkCurantes"
 				}
 			],
 			"transformations": [
@@ -37,7 +37,7 @@
 			],
 			"scriptLines": [
 				"source(output(",
-				"          entry as (fullUrl as string, resource as (author as (reference as string), authored as string, contained as (id as string, identifier as (system as string, type as (text as string), value as string)[], intent as string, requester as (reference as string), resourceType as string, status as string, subject as (reference as string))[], encounter as (reference as string), id as short, item as ({_linkId} as (fhir_comments as string[]), answer as (valueBoolean as boolean, valueDateTime as string, valueInteger as short, valueString as string)[], definition as string, item as (answer as (item as ({_linkId} as (fhir_comments as string[]), item as ({_linkId} as (fhir_comments as string[]), answer as (valueCoding as (code as boolean, system as string))[], linkId as string)[], linkId as string)[], valueCoding as (code as boolean, display as boolean, system as string))[], linkId as double)[], linkId as boolean, text as string)[], meta as (lastUpdated as string, source as string, versionId as short), resourceType as string, source as (identifier as (value as short), type as string), status as string, text as (div as string, status as string)), search as (mode as string))[],",
+				"          entry as (fullUrl as string, resource as (author as (reference as string), authored as string, contained as (id as string, identifier as (system as string, type as (text as string), value as string)[], intent as string, requester as (reference as string), resourceType as string, status as string, subject as (reference as string))[], encounter as (reference as string), id as short, item as ({_linkId} as (fhir_comments as string[]), answer as (valueDateTime as string, valueDecimal as double, valueString as string)[], item as (answer as (item as ({_linkId} as (fhir_comments as string[]), item as ({_linkId} as (fhir_comments as string[]), answer as (valueCoding as (code as boolean, system as string))[], linkId as string)[], linkId as string)[], valueCoding as (code as boolean, display as boolean, system as string))[], linkId as double)[], linkId as boolean, text as string)[], meta as (lastUpdated as string, profile as string[], source as string, versionId as short), resourceType as string, source as (identifier as (value as short), type as string), status as string, text as (div as string, status as string)), search as (mode as string))[],",
 				"          id as string,",
 				"          link as (relation as string, url as string)[],",
 				"          meta as (lastUpdated as string),",
@@ -99,13 +99,12 @@
 				"     mapColumn(",
 				"          patientId,",
 				"          item,",
-				"          valueBoolean = answer.valueBoolean,",
 				"          valueDateTime = answer.valueDateTime,",
-				"          valueInteger = answer.valueInteger,",
+				"          valueDecimal = answer.valueDecimal,",
 				"          valueString = answer.valueString,",
 				"          lastUpdated,",
 				"          id",
-				"     )) ~> sinkDLCurated"
+				"     )) ~> sinkCurantes"
 			]
 		}
 	}

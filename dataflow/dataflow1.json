@@ -38,7 +38,9 @@
 			],
 			"scriptLines": [
 				"source(output(",
+				"          id as short,",
 				"          item as string,",
+				"          lastUpdated as string,",
 				"          patientId as short,",
 				"          valueDateTime as string,",
 				"          valueString as string",
@@ -49,7 +51,7 @@
 				"     format: 'json',",
 				"     fileSystem: 'fhir',",
 				"     folderPath: 'fhir-dev.psi-mis.org/questionnaire_response',",
-				"     fileName: 'part-00000-9caec28c-8a47-4af5-a78e-fc4560e2e6bb-c000.json',",
+				"     fileName: 'part-00000-4559c9e7-c497-4b32-9ce8-9549538eb2c5-c000.json',",
 				"     documentForm: 'documentPerLine') ~> srcQuestionnaire",
 				"select1 pivot(groupBy(patientId),",
 				"     pivotBy(item),",
