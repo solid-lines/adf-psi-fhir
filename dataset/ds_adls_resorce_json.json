@@ -27,7 +27,8 @@
 					"type": "Expression"
 				},
 				"fileSystem": "fhir"
-			}
+			},
+			"encodingName": "UTF-8 without BOM"
 		},
 		"schema": {
 			"type": "object",

@@ -1,0 +1,47 @@
+{
+	"name": "dataflow2",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "ls_adls_raw",
+						"type": "LinkedServiceReference"
+					},
+					"name": "srcPatient"
+				}
+			],
+			"sinks": [],
+			"transformations": [],
+			"scriptLines": [
+				"parameters{",
+				"     date as integer",
+				"}",
+				"source(output(",
+				"          active as boolean,",
+				"          address as (city as string, country as string, line as string[], postalCode as integer, state as string)[],",
+				"          birthDate as date,",
+				"          communication as (language as (coding as (code as string, display as string, system as string)[], text as string), preferred as boolean)[],",
+				"          extension as (url as string, valueCodeableConcept as (coding as (code as string, display as string, system as string)[]))[],",
+				"          gender as string,",
+				"          id as short,",
+				"          identifier as (period as (start as string), system as string, use as string, value as string)[],",
+				"          meta as (lastUpdated as string, profile as string[], source as string, versionId as short),",
+				"          name as (family as string, given as string[], text as string, use as string)[],",
+				"          resourceType as string,",
+				"          telecom as (period as (start as string), system as string, use as string, value as string)[],",
+				"          text as (div as string, status as string)",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'json',",
+				"     fileSystem: 'fhir',",
+				"     folderPath: 'fhir-dev.psi-mis.org/Patient',",
+				"     fileName: (concat(toString($date), '.json')),",
+				"     documentForm: 'arrayOfDocuments') ~> srcPatient"
+			]
+		}
+	}
+}
