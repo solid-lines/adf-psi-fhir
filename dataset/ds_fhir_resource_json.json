@@ -1,0 +1,26 @@
+{
+	"name": "ds_fhir_resource_json",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_fhir_dev_psi_mis_org",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"relativeURL": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation",
+				"relativeUrl": {
+					"value": "@split(dataset().relativeURL,'/fhir/')[1]",
+					"type": "Expression"
+				}
+			}
+		},
+		"schema": {}
+	}
+}
