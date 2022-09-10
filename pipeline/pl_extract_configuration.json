@@ -1,0 +1,124 @@
+{
+	"name": "pl_extract_configuration",
+	"properties": {
+		"activities": [
+			{
+				"name": "Call export fhir api",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://fhir-dev.psi-mis.org/fhir/$export?_type=Patient,QuestionnaireResponse",
+					"method": "GET",
+					"headers": {
+						"Prefer": "respond-async"
+					}
+				}
+			},
+			{
+				"name": "Get value location",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Call export fhir api",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "location",
+					"value": {
+						"value": "@split(activity('Call export fhir api').output.ADFWebActivityResponseHeaders['Content-Location'],'$')[1]",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Copy config file",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Get value location",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "HttpReadSettings",
+							"requestMethod": "GET"
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "JsonSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "JsonWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_fhir_config_export",
+						"type": "DatasetReference",
+						"parameters": {
+							"relativeURL": {
+								"value": "@concat('$',variables('api'))",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_adls_config_export",
+						"type": "DatasetReference",
+						"parameters": {
+							"date": {
+								"value": "@pipeline().parameters.date",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			}
+		],
+		"parameters": {
+			"date": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"location": {
+				"type": "String"
+			}
+		},
+		"annotations": []
+	}
+}
