@@ -19,7 +19,7 @@
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"fileName": {
-					"value": "@dataset().date",
+					"value": "@concat(dataset().date,'.json')",
 					"type": "Expression"
 				},
 				"folderPath": {
