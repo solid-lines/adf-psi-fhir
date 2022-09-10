@@ -89,7 +89,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"relativeURL": {
-								"value": "@concat('$',variables('api'))",
+								"value": "@concat('$',variables('location'))",
 								"type": "Expression"
 							}
 						}
