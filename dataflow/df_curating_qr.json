@@ -1,5 +1,5 @@
 {
-	"name": "dataflow2",
+	"name": "df_curating_qr",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
@@ -82,7 +82,7 @@
 				"     validateSchema: false,",
 				"     format: 'json',",
 				"     fileSystem: 'fhir',",
-				"     folderPath: (concat('fhir-dev.psi-mis.org/Patient/',toString($date))),",
+				"     folderPath: (concat('fhir-dev.psi-mis.org/QuestionnaireResponse/',toString($date))),",
 				"     truncate: true,",
 				"     umask: 0022,",
 				"     preCommands: [],",

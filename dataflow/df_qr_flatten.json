@@ -1,0 +1,38 @@
+{
+	"name": "df_qr_flatten",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "ls_adls_curated",
+						"type": "LinkedServiceReference"
+					},
+					"name": "srcQR"
+				}
+			],
+			"sinks": [],
+			"transformations": [],
+			"scriptLines": [
+				"parameters{",
+				"     date as integer",
+				"}",
+				"source(output(",
+				"          answer as (valueString as string),",
+				"          id as short,",
+				"          item as string,",
+				"          lastUpdated as string,",
+				"          patientId as short",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'json',",
+				"     fileSystem: 'fhir',",
+				"     documentForm: 'arrayOfDocuments',",
+				"     wildcardPaths:[(concat('fhir-dev.psi-mis.org/QuestionnaireResponse/',toString($date),'/*.json'))]) ~> srcQR"
+			]
+		}
+	}
+}
