@@ -13,7 +13,24 @@
 				}
 			],
 			"sinks": [],
-			"transformations": [],
+			"transformations": [
+				{
+					"name": "select1"
+				},
+				{
+					"name": "flatten1"
+				},
+				{
+					"name": "pivot1"
+				},
+				{
+					"name": "MapDrifted1",
+					"description": "Creates an explicit mapping for each drifted column"
+				},
+				{
+					"name": "flatten2"
+				}
+			],
 			"scriptLines": [
 				"parameters{",
 				"     date as integer",
@@ -40,7 +57,57 @@
 				"     fileSystem: 'fhir',",
 				"     folderPath: 'fhir-dev.psi-mis.org/Patient',",
 				"     fileName: (concat(toString($date), '.json')),",
-				"     documentForm: 'arrayOfDocuments') ~> srcPatient"
+				"     documentForm: 'arrayOfDocuments') ~> srcPatient",
+				"srcPatient select(mapColumn(",
+				"          birthDate,",
+				"          gender,",
+				"          id,",
+				"          identifier,",
+				"          lastUpdated = meta.lastUpdated,",
+				"          telecom",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 foldDown(unroll(identifier),",
+				"     mapColumn(",
+				"          birthDate,",
+				"          gender,",
+				"          id,",
+				"          lastUpdated,",
+				"          telecom,",
+				"          systemIdentifier = identifier.system,",
+				"          valueIdentifier = identifier.value",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flatten1",
+				"flatten1 pivot(groupBy(gender,",
+				"          birthDate,",
+				"          id,",
+				"          lastUpdated,",
+				"          telecom),",
+				"     pivotBy(systemIdentifier),",
+				"     {} = case(!isNull(first(valueIdentifier)),1,0),",
+				"     columnNaming: '$N$V',",
+				"     lateral: true) ~> pivot1",
+				"pivot1 derive({urn:facebook} = toInteger(byName('urn:facebook')),",
+				"          {urn:google} = toInteger(byName('urn:google')),",
+				"          {urn:zalo} = toInteger(byName('urn:zalo'))) ~> MapDrifted1",
+				"MapDrifted1 foldDown(unroll(telecom),",
+				"     mapColumn(",
+				"          gender,",
+				"          birthDate,",
+				"          id,",
+				"          lastUpdated,",
+				"          {urn:facebook},",
+				"          {urn:google},",
+				"          {urn:zalo},",
+				"          telecomPeriod = telecom.period.start,",
+				"          telecomSystem = telecom.system,",
+				"          telecomUse = telecom.use,",
+				"          telecomValue = telecom.value",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flatten2"
 			]
 		}
 	}
