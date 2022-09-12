@@ -32,7 +32,7 @@
 					"name": "GetQA"
 				},
 				{
-					"name": "flatten2"
+					"name": "flatResult"
 				}
 			],
 			"scriptLines": [
@@ -84,8 +84,8 @@
 				"          id",
 				"     ),",
 				"     skipDuplicateMapInputs: false,",
-				"     skipDuplicateMapOutputs: false) ~> flatten2",
-				"flatten2 sink(allowSchemaDrift: true,",
+				"     skipDuplicateMapOutputs: false) ~> flatResult",
+				"flatResult sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'json',",
 				"     fileSystem: 'fhir',",

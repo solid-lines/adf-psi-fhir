@@ -29,7 +29,10 @@
 					"name": "split1"
 				},
 				{
-					"name": "flatten1"
+					"name": "flatResult"
+				},
+				{
+					"name": "GetQA"
 				}
 			],
 			"scriptLines": [
@@ -68,7 +71,7 @@
 				"     skipDuplicateMapOutputs: true) ~> select1",
 				"select1 split(type=='Patient',",
 				"     disjoint: false) ~> split1@(isPatient, noPatient)",
-				"split1@isPatient foldDown(unroll(item.answer),",
+				"GetQA foldDown(unroll(item.answer),",
 				"     mapColumn(",
 				"          id,",
 				"          lastUpdated,",
@@ -77,8 +80,18 @@
 				"          answer = item.answer",
 				"     ),",
 				"     skipDuplicateMapInputs: false,",
-				"     skipDuplicateMapOutputs: false) ~> flatten1",
-				"flatten1 sink(allowSchemaDrift: true,",
+				"     skipDuplicateMapOutputs: false) ~> flatResult",
+				"split1@isPatient foldDown(unroll(item),",
+				"     mapColumn(",
+				"          id,",
+				"          item,",
+				"          lastUpdated,",
+				"          type,",
+				"          patientId",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> GetQA",
+				"flatResult sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'json',",
 				"     fileSystem: 'fhir',",
@@ -88,7 +101,16 @@
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> sink1"
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          id,",
+				"          lastUpdated,",
+				"          patientId,",
+				"          item,",
+				"          valueDateTime = answer.valueDateTime,",
+				"          valueDecimal = answer.valueDecimal,",
+				"          valueString = answer.valueString",
+				"     )) ~> sink1"
 			]
 		}
 	}
