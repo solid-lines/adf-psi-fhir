@@ -23,7 +23,7 @@
 					"type": "Expression"
 				},
 				"folderPath": {
-					"value": "@concat('fhir-dev.psi-mis.org/',dataset().type2)",
+					"value": "@concat('fhir.psi-mis.org/',dataset().type2)",
 					"type": "Expression"
 				},
 				"fileSystem": "fhir"
