@@ -15,10 +15,22 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"url": "https://fhir-dev.psi-mis.org/fhir/$export?_type=Patient,QuestionnaireResponse",
+					"url": "https://fhir.psi-mis.org/fhir/$export?_type=Patient,QuestionnaireResponse",
 					"method": "GET",
 					"headers": {
 						"Prefer": "respond-async"
+					},
+					"authentication": {
+						"type": "Basic",
+						"username": "admin",
+						"password": {
+							"type": "AzureKeyVaultSecret",
+							"store": {
+								"referenceName": "ls_keys_fhir",
+								"type": "LinkedServiceReference"
+							},
+							"secretName": "fhir-vn"
+						}
 					}
 				}
 			},
