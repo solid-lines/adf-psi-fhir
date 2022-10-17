@@ -2,7 +2,7 @@
 	"name": "ds_sql_patient",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "ls_sql",
+			"referenceName": "ls_sql_prod",
 			"type": "LinkedServiceReference"
 		},
 		"annotations": [],
