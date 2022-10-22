@@ -1,0 +1,1896 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name"
+		},
+		"ls_keys_fhir": {
+			"type": "string"
+		},
+		"ls_fhir_psi_mis_org": {
+			"type": "string"
+		},
+		"ls_adls_raw": {
+			"type": "string"
+		},
+		"ls_adls_development": {
+			"type": "string"
+		},
+		"ls_adls_curated": {
+			"type": "string"
+		},
+		"ls_sql_prod": {
+			"type": "string"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_execution')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "pl_extract_configuration",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_extract_configuration",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"date": {
+									"value": "@pipeline().parameters.date",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "pl_extract_fhir_resources",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "pl_extract_configuration",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_extract_fhir_resources",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"date": {
+									"value": "@pipeline().parameters.date",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "pl_transform",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "pl_extract_fhir_resources",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_transform",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"date": {
+									"value": "@pipeline().parameters.date",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "pl_load_dwh",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "pl_transform",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_load_dwh",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"date": {
+									"value": "@pipeline().parameters.date",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"parameters": {
+					"date": {
+						"type": "string"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_extract_configuration')]",
+				"[concat(variables('factoryId'), '/pipelines/pl_extract_fhir_resources')]",
+				"[concat(variables('factoryId'), '/pipelines/pl_transform')]",
+				"[concat(variables('factoryId'), '/pipelines/pl_load_dwh')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_extract_configuration')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Call export fhir api",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": "https://fhir.psi-mis.org/fhir/$export?_type=Patient,QuestionnaireResponse",
+							"method": "GET",
+							"headers": {
+								"Prefer": "respond-async"
+							},
+							"authentication": {
+								"type": "Basic",
+								"username": "admin",
+								"password": {
+									"type": "AzureKeyVaultSecret",
+									"store": {
+										"referenceName": "[parameters('ls_keys_fhir')]",
+										"type": "LinkedServiceReference"
+									},
+									"secretName": "fhir-vn"
+								}
+							}
+						}
+					},
+					{
+						"name": "Get value location",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Call export fhir api",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "location",
+							"value": {
+								"value": "@split(activity('Call export fhir api').output.ADFWebActivityResponseHeaders['Content-Location'],'$')[1]",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Copy config file",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Get value location",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "HttpReadSettings",
+									"requestMethod": "GET"
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"sink": {
+								"type": "JsonSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "JsonWriteSettings"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_fhir_config_export",
+								"type": "DatasetReference",
+								"parameters": {
+									"relativeURL": {
+										"value": "@concat('$',variables('location'))",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_adls_config_export",
+								"type": "DatasetReference",
+								"parameters": {
+									"date": {
+										"value": "@pipeline().parameters.date",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					}
+				],
+				"parameters": {
+					"date": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"location": {
+						"type": "String"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_fhir_config_export')]",
+				"[concat(variables('factoryId'), '/datasets/ds_adls_config_export')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_extract_fhir_resources')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Config Values",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "ds_adls_config_export",
+								"type": "DatasetReference",
+								"parameters": {
+									"date": {
+										"value": "@pipeline().parameters.date",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Config Values",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Config Values').output.value[0].output",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Copy FHIR resource to data lake",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "JsonSource",
+											"storeSettings": {
+												"type": "HttpReadSettings",
+												"requestMethod": "GET"
+											},
+											"formatSettings": {
+												"type": "JsonReadSettings"
+											}
+										},
+										"sink": {
+											"type": "JsonSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "JsonWriteSettings",
+												"filePattern": "arrayOfObjects"
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "ds_fhir_resource_json",
+											"type": "DatasetReference",
+											"parameters": {
+												"relativeURL": {
+													"value": "@item().url",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "ds_adls_resorce_json",
+											"type": "DatasetReference",
+											"parameters": {
+												"type2": {
+													"value": "@item().type",
+													"type": "Expression"
+												},
+												"date": {
+													"value": "@pipeline().parameters.date",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"parameters": {
+					"date": {
+						"type": "string"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_adls_config_export')]",
+				"[concat(variables('factoryId'), '/datasets/ds_fhir_resource_json')]",
+				"[concat(variables('factoryId'), '/datasets/ds_adls_resorce_json')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_transform')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Data flow Patient",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_patient_fhir_v2",
+								"type": "DataFlowReference",
+								"parameters": {
+									"date": {
+										"value": "@pipeline().parameters.date",
+										"type": "Expression"
+									}
+								}
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "QR Curate transformations",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_curating_qr",
+								"type": "DataFlowReference",
+								"parameters": {
+									"date": {
+										"value": "@pipeline().parameters.date",
+										"type": "Expression"
+									}
+								}
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "Flatten QR",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "QR Curate transformations",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_qr_flatten",
+								"type": "DataFlowReference",
+								"parameters": {
+									"date": {
+										"value": "@pipeline().parameters.date",
+										"type": "Expression"
+									}
+								}
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"parameters": {
+					"date": {
+						"type": "string"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_patient_fhir_v2')]",
+				"[concat(variables('factoryId'), '/dataflows/df_curating_qr')]",
+				"[concat(variables('factoryId'), '/dataflows/df_qr_flatten')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_load_dwh')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy Patient",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFolderPath": {
+										"value": "@concat('fhir.psi-mis.org/Patient/',pipeline().parameters.date)",
+										"type": "Expression"
+									},
+									"wildcardFileName": "*.csv",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"preCopyScript": "delete from Patient",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"tableOption": "autoCreate",
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "id",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "id",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "birthDate",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "birthDate",
+											"type": "DateTime",
+											"physicalType": "date"
+										}
+									},
+									{
+										"source": {
+											"name": "gender",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "gender",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "lastUpdated",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "lastUpdated",
+											"type": "DateTime",
+											"physicalType": "date"
+										}
+									},
+									{
+										"source": {
+											"name": "urn:facebook",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "urn:facebook",
+											"type": "Boolean",
+											"physicalType": "bit"
+										}
+									},
+									{
+										"source": {
+											"name": "urn:zalo",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "urn:zalo",
+											"type": "Boolean",
+											"physicalType": "bit"
+										}
+									},
+									{
+										"source": {
+											"name": "urn:google",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "urn:google",
+											"type": "Boolean",
+											"physicalType": "bit"
+										}
+									},
+									{
+										"source": {
+											"name": "telecomPeriod",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "telecomPeriod",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "telecomSystem",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "telecomSystem",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "telecomUse",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "telecomUse",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "telecomValue",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "telecomValue",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									}
+								],
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_adls_development_patient_csv",
+								"type": "DatasetReference"
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_sql_patient",
+								"type": "DatasetReference"
+							}
+						]
+					},
+					{
+						"name": "Copy QR",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Copy Patient",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFolderPath": {
+										"value": "@concat('fhir.psi-mis.org/QuestionnaireResponse/',pipeline().parameters.date)",
+										"type": "Expression"
+									},
+									"wildcardFileName": "*.csv",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"preCopyScript": "delete from QuestionnaireResponse",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"tableOption": "autoCreate",
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "id",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "id",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "lastUpdated",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "lastUpdated",
+											"type": "DateTime",
+											"physicalType": "date"
+										}
+									},
+									{
+										"source": {
+											"name": "patientId",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "patient_id",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "Action Type",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Action Type",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CTA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CTA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "Duration Seconds",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Duration Seconds",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "Encounter",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Encounter",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "End DateTime",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "End DateTime",
+											"type": "DateTime",
+											"physicalType": "datetime"
+										}
+									},
+									{
+										"source": {
+											"name": "Locale",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Locale",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "Location",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Location",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "Start DateTime",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Start DateTime",
+											"type": "DateTime",
+											"physicalType": "datetime"
+										}
+									}
+								],
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_adls_development_qr_csv",
+								"type": "DatasetReference"
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_sql_qr",
+								"type": "DatasetReference"
+							}
+						]
+					}
+				],
+				"parameters": {
+					"date": {
+						"type": "string"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_adls_development_patient_csv')]",
+				"[concat(variables('factoryId'), '/datasets/ds_sql_patient')]",
+				"[concat(variables('factoryId'), '/datasets/ds_adls_development_qr_csv')]",
+				"[concat(variables('factoryId'), '/datasets/ds_sql_qr')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_fhir_config_export')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "[parameters('ls_fhir_psi_mis_org')]",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"relativeURL": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation",
+						"relativeUrl": {
+							"value": "@dataset().relativeURL",
+							"type": "Expression"
+						}
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_adls_config_export')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "[parameters('ls_adls_raw')]",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"date": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@concat(dataset().date,'.json')",
+							"type": "Expression"
+						},
+						"folderPath": "fhir",
+						"fileSystem": "configs"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_patient_fhir_v2')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "[parameters('ls_adls_raw')]",
+								"type": "LinkedServiceReference"
+							},
+							"name": "srcPatient"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "[parameters('ls_adls_development')]",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sinkDevelopmentDataLake"
+						}
+					],
+					"transformations": [
+						{
+							"name": "selectPatientData"
+						},
+						{
+							"name": "flattenIdentifier"
+						},
+						{
+							"name": "pivotChannels"
+						},
+						{
+							"name": "MapDriftedNewColumns",
+							"description": "Creates an explicit mapping for each drifted column"
+						},
+						{
+							"name": "flattenTelecom"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     date as integer",
+						"}",
+						"source(output(",
+						"          active as boolean,",
+						"          address as (city as string, country as string, line as string[], postalCode as integer, state as string)[],",
+						"          birthDate as date,",
+						"          communication as (language as (coding as (code as string, display as string, system as string)[], text as string), preferred as boolean)[],",
+						"          extension as (url as string, valueCodeableConcept as (coding as (code as string, display as string, system as string)[]))[],",
+						"          gender as string,",
+						"          id as short,",
+						"          identifier as (period as (start as string), system as string, use as string, value as string)[],",
+						"          meta as (lastUpdated as string, profile as string[], source as string, versionId as short),",
+						"          name as (family as string, given as string[], text as string, use as string)[],",
+						"          resourceType as string,",
+						"          telecom as (period as (start as string), system as string, use as string, value as string)[],",
+						"          text as (div as string, status as string)",
+						"     ),",
+						"     useSchema: false,",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'json',",
+						"     fileSystem: 'fhir',",
+						"     folderPath: 'fhir.psi-mis.org/Patient',",
+						"     fileName: (concat(toString($date), '.json')),",
+						"     documentForm: 'arrayOfDocuments') ~> srcPatient",
+						"srcPatient select(mapColumn(",
+						"          birthDate,",
+						"          gender,",
+						"          id,",
+						"          identifier,",
+						"          lastUpdated = meta.lastUpdated,",
+						"          telecom",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectPatientData",
+						"selectPatientData foldDown(unroll(identifier),",
+						"     mapColumn(",
+						"          birthDate,",
+						"          gender,",
+						"          id,",
+						"          lastUpdated,",
+						"          telecom,",
+						"          systemIdentifier = identifier.system,",
+						"          valueIdentifier = identifier.value",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> flattenIdentifier",
+						"flattenIdentifier pivot(groupBy(gender,",
+						"          birthDate,",
+						"          id,",
+						"          lastUpdated,",
+						"          telecom),",
+						"     pivotBy(systemIdentifier),",
+						"     {} = case(!isNull(first(valueIdentifier)),1,0),",
+						"     columnNaming: '$N$V',",
+						"     lateral: true) ~> pivotChannels",
+						"pivotChannels derive({urn:facebook} = toInteger(byName('urn:facebook')),",
+						"          {urn:google} = toInteger(byName('urn:google')),",
+						"          {urn:zalo} = toInteger(byName('urn:zalo'))) ~> MapDriftedNewColumns",
+						"MapDriftedNewColumns foldDown(unroll(telecom),",
+						"     mapColumn(",
+						"          gender,",
+						"          birthDate,",
+						"          id,",
+						"          lastUpdated,",
+						"          {urn:facebook},",
+						"          {urn:google},",
+						"          {urn:zalo},",
+						"          telecomPeriod = telecom.period.start,",
+						"          telecomSystem = telecom.system,",
+						"          telecomUse = telecom.use,",
+						"          telecomValue = telecom.value",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> flattenTelecom",
+						"flattenTelecom sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'fhir',",
+						"     folderPath: (concat('fhir.psi-mis.org/Patient/',toString($date))),",
+						"     truncate: true,",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> sinkDevelopmentDataLake"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_curating_qr')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "[parameters('ls_adls_raw')]",
+								"type": "LinkedServiceReference"
+							},
+							"name": "srcQR"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "[parameters('ls_adls_curated')]",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "select1"
+						},
+						{
+							"name": "split1"
+						},
+						{
+							"name": "flatResult"
+						},
+						{
+							"name": "GetQA"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     date as integer",
+						"}",
+						"source(output(",
+						"          id as short,",
+						"          item as (answer as (valueDateTime as string, valueDecimal as double, valueString as string)[], text as string)[],",
+						"          meta as (lastUpdated as string, profile as string[], source as string, versionId as short),",
+						"          resourceType as string,",
+						"          source as (identifier as (value as short), type as string),",
+						"          status as string",
+						"     ),",
+						"     useSchema: false,",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'json',",
+						"     fileSystem: 'fhir',",
+						"     folderPath: 'fhir.psi-mis.org/QuestionnaireResponse',",
+						"     fileName: (concat(toString($date),'.json')),",
+						"     documentForm: 'arrayOfDocuments') ~> srcQR",
+						"srcQR select(mapColumn(",
+						"          id,",
+						"          item,",
+						"          lastUpdated = meta.lastUpdated,",
+						"          type = source.type,",
+						"          patientId = source.identifier.value",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 split(type=='Patient',",
+						"     disjoint: false) ~> split1@(isPatient, noPatient)",
+						"GetQA foldDown(unroll(item.answer),",
+						"     mapColumn(",
+						"          id,",
+						"          lastUpdated,",
+						"          patientId,",
+						"          item = item.text,",
+						"          answer = item.answer",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> flatResult",
+						"split1@isPatient foldDown(unroll(item),",
+						"     mapColumn(",
+						"          id,",
+						"          item,",
+						"          lastUpdated,",
+						"          type,",
+						"          patientId",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> GetQA",
+						"flatResult sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'json',",
+						"     fileSystem: 'fhir',",
+						"     folderPath: (concat('fhir.psi-mis.org/QuestionnaireResponse/',toString($date))),",
+						"     truncate: true,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     mapColumn(",
+						"          id,",
+						"          lastUpdated,",
+						"          patientId,",
+						"          item,",
+						"          valueDateTime = answer.valueDateTime,",
+						"          valueDecimal = answer.valueDecimal,",
+						"          valueString = answer.valueString",
+						"     )) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_qr_flatten')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "[parameters('ls_adls_curated')]",
+								"type": "LinkedServiceReference"
+							},
+							"name": "srcQR"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "[parameters('ls_adls_development')]",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sinkDevelopment"
+						}
+					],
+					"transformations": [
+						{
+							"name": "unpivotValues"
+						},
+						{
+							"name": "pivotDataValues"
+						},
+						{
+							"name": "selectFields"
+						},
+						{
+							"name": "MapDriftedColumns",
+							"description": "Creates an explicit mapping for each drifted column"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     date as integer",
+						"}",
+						"source(output(",
+						"          id as short,",
+						"          item as string,",
+						"          lastUpdated as string,",
+						"          patientId as short,",
+						"          valueDateTime as string,",
+						"          valueDecimal as string,",
+						"          valueString as string",
+						"     ),",
+						"     useSchema: false,",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'json',",
+						"     fileSystem: 'fhir',",
+						"     documentForm: 'documentPerLine',",
+						"     wildcardPaths:[(concat('fhir.psi-mis.org/QuestionnaireResponse/',toString($date),'/*.json'))]) ~> srcQR",
+						"srcQR unpivot(output(",
+						"          valueType as string,",
+						"          value as string",
+						"     ),",
+						"     ungroupBy(patientId,",
+						"          id,",
+						"          item,",
+						"          lastUpdated),",
+						"     lateral: true,",
+						"     ignoreNullPivots: true) ~> unpivotValues",
+						"selectFields pivot(groupBy(id,",
+						"          lastUpdated,",
+						"          patientId),",
+						"     pivotBy(item),",
+						"     {} = first(value),",
+						"     columnNaming: '$N$V',",
+						"     lateral: true) ~> pivotDataValues",
+						"unpivotValues select(mapColumn(",
+						"          patientId,",
+						"          id,",
+						"          item,",
+						"          lastUpdated,",
+						"          value",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectFields",
+						"pivotDataValues derive({Action Type} = toString(byName('Action Type')),",
+						"          CTA = toString(byName('CTA')),",
+						"          {Duration Seconds} = toString(byName('Duration Seconds')),",
+						"          Encounter = toString(byName('Encounter')),",
+						"          {End DateTime} = toString(byName('End DateTime')),",
+						"          {Have you bought a self test kit?} = toString(byName('Have you bought a self test kit?')),",
+						"          Locale = toString(byName('Locale')),",
+						"          Location = toString(byName('Location')),",
+						"          {Start DateTime} = toString(byName('Start DateTime')),",
+						"          {Where did you buy your test kit from?} = toString(byName('Where did you buy your test kit from?'))) ~> MapDriftedColumns",
+						"MapDriftedColumns sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'fhir',",
+						"     folderPath: (concat('fhir.psi-mis.org/QuestionnaireResponse/', toString($date),'/')),",
+						"     truncate: true,",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> sinkDevelopment"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_adls_development_patient_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "[parameters('ls_adls_development')]",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "part-00000-1fe9c1d3-a8ac-46ce-93e6-51a98ab79084-c000.csv",
+						"folderPath": "fhir.psi-mis.org/patient",
+						"fileSystem": "fhir"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "1990-02-23",
+						"type": "String"
+					},
+					{
+						"name": "male",
+						"type": "String"
+					},
+					{
+						"name": "1",
+						"type": "String"
+					},
+					{
+						"name": "2022-04-16T06:32:54.33+00:00",
+						"type": "String"
+					},
+					{
+						"name": "Tester",
+						"type": "String"
+					},
+					{
+						"name": "official",
+						"type": "String"
+					},
+					{
+						"name": "Prop_6",
+						"type": "String"
+					},
+					{
+						"name": "Prop_7",
+						"type": "String"
+					},
+					{
+						"name": "Prop_8",
+						"type": "String"
+					},
+					{
+						"name": "Prop_9",
+						"type": "String"
+					},
+					{
+						"name": "Prop_10",
+						"type": "String"
+					},
+					{
+						"name": "Prop_11",
+						"type": "String"
+					},
+					{
+						"name": "Gaspar",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_sql_patient')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "[parameters('ls_sql_prod')]",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "id",
+						"type": "varchar"
+					},
+					{
+						"name": "birthDate",
+						"type": "date"
+					},
+					{
+						"name": "gender",
+						"type": "varchar"
+					},
+					{
+						"name": "lastUpdated",
+						"type": "date"
+					},
+					{
+						"name": "urn:facebook",
+						"type": "bit"
+					},
+					{
+						"name": "urn:zalo",
+						"type": "bit"
+					},
+					{
+						"name": "urn:google",
+						"type": "bit"
+					},
+					{
+						"name": "telecomPeriod",
+						"type": "varchar"
+					},
+					{
+						"name": "telecomSystem",
+						"type": "varchar"
+					},
+					{
+						"name": "telecomUse",
+						"type": "varchar"
+					},
+					{
+						"name": "telecomValue",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Patient"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_adls_development_qr_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "[parameters('ls_adls_development')]",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "fhir.psi-mis.org/QuestionnaireResponse/20220910",
+						"fileSystem": "fhir"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "id",
+						"type": "String"
+					},
+					{
+						"name": "lastUpdated",
+						"type": "String"
+					},
+					{
+						"name": "patientId",
+						"type": "String"
+					},
+					{
+						"name": "-",
+						"type": "String"
+					},
+					{
+						"name": "Action Type",
+						"type": "String"
+					},
+					{
+						"name": "CTA",
+						"type": "String"
+					},
+					{
+						"name": "Duration Seconds",
+						"type": "String"
+					},
+					{
+						"name": "Encounter",
+						"type": "String"
+					},
+					{
+						"name": "End DateTime",
+						"type": "String"
+					},
+					{
+						"name": "Have you bought a self test kit?",
+						"type": "String"
+					},
+					{
+						"name": "Locale",
+						"type": "String"
+					},
+					{
+						"name": "Location",
+						"type": "String"
+					},
+					{
+						"name": "Start DateTime",
+						"type": "String"
+					},
+					{
+						"name": "Where did you buy your test kit from?",
+						"type": "String"
+					},
+					{
+						"name": "test1",
+						"type": "String"
+					},
+					{
+						"name": "test2",
+						"type": "String"
+					},
+					{
+						"name": "test4",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_sql_qr')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "[parameters('ls_sql_prod')]",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "id",
+						"type": "varchar"
+					},
+					{
+						"name": "lastUpdated",
+						"type": "date"
+					},
+					{
+						"name": "patient_id",
+						"type": "varchar"
+					},
+					{
+						"name": "Action Type",
+						"type": "varchar"
+					},
+					{
+						"name": "CTA",
+						"type": "varchar"
+					},
+					{
+						"name": "Duration Seconds",
+						"type": "varchar"
+					},
+					{
+						"name": "Encounter",
+						"type": "varchar"
+					},
+					{
+						"name": "End DateTime",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "Locale",
+						"type": "varchar"
+					},
+					{
+						"name": "Location",
+						"type": "varchar"
+					},
+					{
+						"name": "Start DateTime",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "",
+					"table": "QuestionnaireResponse"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_fhir_resource_json')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "[parameters('ls_fhir_psi_mis_org')]",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"relativeURL": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation",
+						"relativeUrl": {
+							"value": "@split(dataset().relativeURL,'/fhir/')[1]",
+							"type": "Expression"
+						}
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_adls_resorce_json')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "[parameters('ls_adls_raw')]",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"type2": {
+						"type": "string"
+					},
+					"date": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@concat(dataset().date,'.json')",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@concat('fhir.psi-mis.org/',dataset().type2)",
+							"type": "Expression"
+						},
+						"fileSystem": "fhir"
+					},
+					"encodingName": "UTF-8 without BOM"
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"resourceType": {
+							"type": "string"
+						},
+						"id": {
+							"type": "string"
+						},
+						"meta": {
+							"type": "object",
+							"properties": {
+								"lastUpdated": {
+									"type": "string"
+								}
+							}
+						},
+						"type": {
+							"type": "string"
+						},
+						"total": {
+							"type": "integer"
+						},
+						"link": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"relation": {
+										"type": "string"
+									},
+									"url": {
+										"type": "string"
+									}
+								}
+							}
+						},
+						"entry": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"fullUrl": {
+										"type": "string"
+									},
+									"resource": {
+										"type": "object",
+										"properties": {
+											"resourceType": {
+												"type": "string"
+											},
+											"id": {
+												"type": "string"
+											},
+											"meta": {
+												"type": "object",
+												"properties": {
+													"versionId": {
+														"type": "string"
+													},
+													"lastUpdated": {
+														"type": "string"
+													},
+													"source": {
+														"type": "string"
+													}
+												}
+											},
+											"text": {
+												"type": "object",
+												"properties": {
+													"status": {
+														"type": "string"
+													},
+													"div": {
+														"type": "string"
+													}
+												}
+											},
+											"name": {
+												"type": "array",
+												"items": {
+													"type": "object",
+													"properties": {
+														"use": {
+															"type": "string"
+														},
+														"family": {
+															"type": "string"
+														},
+														"given": {
+															"type": "array",
+															"items": {
+																"type": "string"
+															}
+														}
+													}
+												}
+											},
+											"gender": {
+												"type": "string"
+											},
+											"birthDate": {
+												"type": "string"
+											}
+										}
+									},
+									"search": {
+										"type": "object",
+										"properties": {
+											"mode": {
+												"type": "string"
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}
