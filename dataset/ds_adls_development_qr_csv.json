@@ -10,7 +10,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"folderPath": "fhir-dev.psi-mis.org/QuestionnaireResponse/20220910",
+				"folderPath": "fhir.psi-mis.org/QuestionnaireResponse/20220910",
 				"fileSystem": "fhir"
 			},
 			"columnDelimiter": ",",

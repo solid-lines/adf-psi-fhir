@@ -2,7 +2,7 @@
 	"name": "ds_sql_qr",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "ls_sql",
+			"referenceName": "ls_sql_prod",
 			"type": "LinkedServiceReference"
 		},
 		"annotations": [],
@@ -58,7 +58,7 @@
 			}
 		],
 		"typeProperties": {
-			"schema": "dbo",
+			"schema": "",
 			"table": "QuestionnaireResponse"
 		}
 	}

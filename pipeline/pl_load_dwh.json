@@ -21,7 +21,7 @@
 							"type": "AzureBlobFSReadSettings",
 							"recursive": true,
 							"wildcardFolderPath": {
-								"value": "@concat('fhir-dev.psi-mis.org/Patient/',pipeline().parameters.date)",
+								"value": "@concat('fhir.psi-mis.org/Patient/',pipeline().parameters.date)",
 								"type": "Expression"
 							},
 							"wildcardFileName": "*.csv",
@@ -33,9 +33,10 @@
 					},
 					"sink": {
 						"type": "AzureSqlSink",
-						"preCopyScript": "delete from patient",
+						"preCopyScript": "delete from Patient",
 						"writeBehavior": "insert",
 						"sqlWriterUseTableLock": false,
+						"tableOption": "autoCreate",
 						"disableMetricsCollection": false
 					},
 					"enableStaging": false,
@@ -221,7 +222,7 @@
 							"type": "AzureBlobFSReadSettings",
 							"recursive": true,
 							"wildcardFolderPath": {
-								"value": "@concat('fhir-dev.psi-mis.org/QuestionnaireResponse/',pipeline().parameters.date)",
+								"value": "@concat('fhir.psi-mis.org/QuestionnaireResponse/',pipeline().parameters.date)",
 								"type": "Expression"
 							},
 							"wildcardFileName": "*.csv",
@@ -236,6 +237,7 @@
 						"preCopyScript": "delete from QuestionnaireResponse",
 						"writeBehavior": "insert",
 						"sqlWriterUseTableLock": false,
+						"tableOption": "autoCreate",
 						"disableMetricsCollection": false
 					},
 					"enableStaging": false,

@@ -1,0 +1,10 @@
+{
+	"name": "ls_keys_fhir",
+	"properties": {
+		"annotations": [],
+		"type": "AzureKeyVault",
+		"typeProperties": {
+			"baseUrl": "https://psi-fhir.vault.azure.net/"
+		}
+	}
+}

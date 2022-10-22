@@ -2,7 +2,7 @@
 	"name": "ds_fhir_config_export",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "ls_fhir_dev_psi_mis_org",
+			"referenceName": "ls_fhir_psi_mis_org",
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {

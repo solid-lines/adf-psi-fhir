@@ -6,7 +6,16 @@
 		"typeProperties": {
 			"url": "https://fhir.psi-mis.org/fhir/",
 			"enableServerCertificateValidation": true,
-			"authenticationType": "Anonymous"
+			"authenticationType": "Basic",
+			"userName": "admin",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "ls_keys_fhir",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "fhir-vn"
+			}
 		}
 	}
 }
