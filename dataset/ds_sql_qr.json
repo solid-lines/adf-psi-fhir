@@ -1,0 +1,65 @@
+{
+	"name": "ds_sql_qr",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sql_prod",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "id",
+				"type": "varchar"
+			},
+			{
+				"name": "lastUpdated",
+				"type": "date"
+			},
+			{
+				"name": "patient_id",
+				"type": "varchar"
+			},
+			{
+				"name": "Action Type",
+				"type": "varchar"
+			},
+			{
+				"name": "CTA",
+				"type": "varchar"
+			},
+			{
+				"name": "Duration Seconds",
+				"type": "varchar"
+			},
+			{
+				"name": "Encounter",
+				"type": "varchar"
+			},
+			{
+				"name": "End DateTime",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "Locale",
+				"type": "varchar"
+			},
+			{
+				"name": "Location",
+				"type": "varchar"
+			},
+			{
+				"name": "Start DateTime",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "",
+			"table": "QuestionnaireResponse"
+		}
+	}
+}

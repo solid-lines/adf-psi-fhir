@@ -1,0 +1,155 @@
+{
+	"name": "df_patient",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "ls_adls_raw",
+						"type": "LinkedServiceReference"
+					},
+					"name": "srcPatient"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "ls_adls_development",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sinkDevelopmentPatient"
+				}
+			],
+			"transformations": [
+				{
+					"name": "flatten1"
+				},
+				{
+					"name": "flattenIdentifier"
+				},
+				{
+					"name": "pivot1"
+				},
+				{
+					"name": "MapDrifted1",
+					"description": "Creates an explicit mapping for each drifted column"
+				},
+				{
+					"name": "flatten2"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          entry as (fullUrl as string, resource as (active as boolean, birthDate as date, communication as (language as (coding as (code as string, display as string, system as string)[], text as string), preferred as boolean)[], extension as (url as string, valueCodeableConcept as (coding as (code as string, system as string)[]))[], gender as string, id as short, identifier as (period as (start as string), system as string, use as string, value as string)[], meta as (lastUpdated as string, profile as string[], source as string, versionId as short), name as (family as string, given as string[], text as string, use as string)[], resourceType as string, telecom as (period as (start as string), system as string, use as string, value as string)[], text as (div as string, status as string)), search as (mode as string))[],",
+				"          id as string,",
+				"          link as (relation as string, url as string)[],",
+				"          meta as (lastUpdated as string),",
+				"          resourceType as string,",
+				"          total as short,",
+				"          type as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'json',",
+				"     fileSystem: 'fhir',",
+				"     folderPath: 'fhir-dev.psi-mis.org/patient',",
+				"     fileName: '2022-07-31-patient.json',",
+				"     documentForm: 'arrayOfDocuments') ~> srcPatient",
+				"srcPatient foldDown(unroll(entry),",
+				"     mapColumn(",
+				"          birthDate = entry.resource.birthDate,",
+				"          gender = entry.resource.gender,",
+				"          id = entry.resource.id,",
+				"          lastUpdated = entry.resource.meta.lastUpdated,",
+				"          telecom = entry.resource.telecom,",
+				"          identifier = entry.resource.identifier",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flatten1",
+				"flatten1 foldDown(unroll(identifier),",
+				"     mapColumn(",
+				"          birthDate,",
+				"          gender,",
+				"          id,",
+				"          lastUpdated,",
+				"          telecom,",
+				"          systemIdentifier = identifier.system,",
+				"          valueIdentifier = identifier.value",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flattenIdentifier",
+				"flattenIdentifier pivot(groupBy(gender,",
+				"          birthDate,",
+				"          id,",
+				"          lastUpdated,",
+				"          telecom),",
+				"     pivotBy(systemIdentifier),",
+				"     {} = case(!isNull(first(valueIdentifier)),1,0),",
+				"     columnNaming: '$N$V',",
+				"     lateral: true) ~> pivot1",
+				"pivot1 derive({urn:facebook} = toBoolean(byName('urn:facebook')),",
+				"          {urn:google} = toBoolean(byName('urn:google')),",
+				"          {urn:zalo} = toBoolean(byName('urn:zalo'))) ~> MapDrifted1",
+				"MapDrifted1 foldDown(unroll(telecom),",
+				"     mapColumn(",
+				"          gender,",
+				"          birthDate,",
+				"          id,",
+				"          lastUpdated,",
+				"          {urn:facebook},",
+				"          {urn:google},",
+				"          {urn:zalo},",
+				"          telecomPeriod = telecom.period.start,",
+				"          telecomSystem = telecom.system,",
+				"          telecomUse = telecom.use,",
+				"          telecomValue = telecom.value",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flatten2",
+				"flatten2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          gender as string,",
+				"          birthDate as date,",
+				"          id as short,",
+				"          lastUpdated as string,",
+				"          {urn:facebook} as boolean,",
+				"          {urn:google} as boolean,",
+				"          {urn:zalo} as boolean,",
+				"          telecomPeriod as string,",
+				"          telecomSystem as string,",
+				"          telecomUse as string,",
+				"          telecomValue as string",
+				"     ),",
+				"     format: 'delimited',",
+				"     fileSystem: 'fhir',",
+				"     folderPath: 'fhir-dev.psi-mis.org/patient',",
+				"     truncate: true,",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          gender,",
+				"          birthDate,",
+				"          id,",
+				"          lastUpdated,",
+				"          {urn:facebook},",
+				"          {urn:google},",
+				"          {urn:zalo},",
+				"          telecomPeriod,",
+				"          telecomSystem,",
+				"          telecomUse,",
+				"          telecomValue",
+				"     )) ~> sinkDevelopmentPatient"
+			]
+		}
+	}
+}

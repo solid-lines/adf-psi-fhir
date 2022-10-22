@@ -1,0 +1,110 @@
+{
+	"name": "pl_execution",
+	"properties": {
+		"activities": [
+			{
+				"name": "pl_extract_configuration",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_extract_configuration",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"date": {
+							"value": "@pipeline().parameters.date",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "pl_extract_fhir_resources",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "pl_extract_configuration",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_extract_fhir_resources",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"date": {
+							"value": "@pipeline().parameters.date",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "pl_transform",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "pl_extract_fhir_resources",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_transform",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"date": {
+							"value": "@pipeline().parameters.date",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "pl_load_dwh",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "pl_transform",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_load_dwh",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"date": {
+							"value": "@pipeline().parameters.date",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"date": {
+				"type": "string"
+			}
+		},
+		"annotations": []
+	}
+}

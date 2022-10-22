@@ -1,0 +1,110 @@
+{
+	"name": "pl_transform",
+	"properties": {
+		"activities": [
+			{
+				"name": "Data flow Patient",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "df_patient_fhir_v2",
+						"type": "DataFlowReference",
+						"parameters": {
+							"date": {
+								"value": "@pipeline().parameters.date",
+								"type": "Expression"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "QR Curate transformations",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "df_curating_qr",
+						"type": "DataFlowReference",
+						"parameters": {
+							"date": {
+								"value": "@pipeline().parameters.date",
+								"type": "Expression"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "Flatten QR",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "QR Curate transformations",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "df_qr_flatten",
+						"type": "DataFlowReference",
+						"parameters": {
+							"date": {
+								"value": "@pipeline().parameters.date",
+								"type": "Expression"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"parameters": {
+			"date": {
+				"type": "string"
+			}
+		},
+		"annotations": []
+	}
+}

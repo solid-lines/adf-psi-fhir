@@ -1,0 +1,113 @@
+{
+	"name": "df_curating_qr",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "ls_adls_raw",
+						"type": "LinkedServiceReference"
+					},
+					"name": "srcQR"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "ls_adls_curated",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "select1"
+				},
+				{
+					"name": "split1"
+				},
+				{
+					"name": "flatResult"
+				},
+				{
+					"name": "GetQA"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     date as integer",
+				"}",
+				"source(output(",
+				"          id as short,",
+				"          item as (answer as (valueDateTime as string, valueDecimal as double, valueString as string)[], text as string)[],",
+				"          meta as (lastUpdated as string, profile as string[], source as string, versionId as short),",
+				"          resourceType as string,",
+				"          source as (identifier as (value as short), type as string),",
+				"          status as string",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'json',",
+				"     fileSystem: 'fhir',",
+				"     folderPath: 'fhir.psi-mis.org/QuestionnaireResponse',",
+				"     fileName: (concat(toString($date),'.json')),",
+				"     documentForm: 'arrayOfDocuments') ~> srcQR",
+				"srcQR select(mapColumn(",
+				"          id,",
+				"          item,",
+				"          lastUpdated = meta.lastUpdated,",
+				"          type = source.type,",
+				"          patientId = source.identifier.value",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 split(type=='Patient',",
+				"     disjoint: false) ~> split1@(isPatient, noPatient)",
+				"GetQA foldDown(unroll(item.answer),",
+				"     mapColumn(",
+				"          id,",
+				"          lastUpdated,",
+				"          patientId,",
+				"          item = item.text,",
+				"          answer = item.answer",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flatResult",
+				"split1@isPatient foldDown(unroll(item),",
+				"     mapColumn(",
+				"          id,",
+				"          item,",
+				"          lastUpdated,",
+				"          type,",
+				"          patientId",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> GetQA",
+				"flatResult sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'json',",
+				"     fileSystem: 'fhir',",
+				"     folderPath: (concat('fhir.psi-mis.org/QuestionnaireResponse/',toString($date))),",
+				"     truncate: true,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          id,",
+				"          lastUpdated,",
+				"          patientId,",
+				"          item,",
+				"          valueDateTime = answer.valueDateTime,",
+				"          valueDecimal = answer.valueDecimal,",
+				"          valueString = answer.valueString",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}

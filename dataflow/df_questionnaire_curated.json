@@ -1,0 +1,111 @@
+{
+	"name": "df_questionnaire_curated",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "ls_adls_raw",
+						"type": "LinkedServiceReference"
+					},
+					"name": "srcQuestionarie"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "ls_adls_curated",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sinkCurantes"
+				}
+			],
+			"transformations": [
+				{
+					"name": "flatten1"
+				},
+				{
+					"name": "isPatient"
+				},
+				{
+					"name": "GetQA"
+				},
+				{
+					"name": "flatResult"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          entry as (fullUrl as string, resource as (author as (reference as string), authored as string, contained as (id as string, identifier as (system as string, type as (text as string), value as string)[], intent as string, requester as (reference as string), resourceType as string, status as string, subject as (reference as string))[], encounter as (reference as string), id as short, item as ({_linkId} as (fhir_comments as string[]), answer as (valueDateTime as string, valueDecimal as double, valueString as string)[], item as (answer as (item as ({_linkId} as (fhir_comments as string[]), item as ({_linkId} as (fhir_comments as string[]), answer as (valueCoding as (code as boolean, system as string))[], linkId as string)[], linkId as string)[], valueCoding as (code as boolean, display as boolean, system as string))[], linkId as double)[], linkId as boolean, text as string)[], meta as (lastUpdated as string, profile as string[], source as string, versionId as short), resourceType as string, source as (identifier as (value as short), type as string), status as string, text as (div as string, status as string)), search as (mode as string))[],",
+				"          id as string,",
+				"          link as (relation as string, url as string)[],",
+				"          meta as (lastUpdated as string),",
+				"          resourceType as string,",
+				"          total as short,",
+				"          type as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'json',",
+				"     fileSystem: 'fhir',",
+				"     folderPath: 'fhir-dev.psi-mis.org/questionnaire_response',",
+				"     fileName: '2022-07-31-questionnaire_response.json',",
+				"     documentForm: 'arrayOfDocuments') ~> srcQuestionarie",
+				"srcQuestionarie foldDown(unroll(entry),",
+				"     mapColumn(",
+				"          lastUpdated = entry.resource.meta.lastUpdated,",
+				"          type = entry.resource.source.type,",
+				"          patientId = entry.resource.source.identifier.value,",
+				"          id = entry.resource.id,",
+				"          item = entry.resource.item",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flatten1",
+				"flatten1 split(type=='Patient',",
+				"     disjoint: false) ~> isPatient@(isPatient, noPatient)",
+				"isPatient@isPatient foldDown(unroll(item),",
+				"     mapColumn(",
+				"          type,",
+				"          patientId,",
+				"          item,",
+				"          lastUpdated,",
+				"          id",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> GetQA",
+				"GetQA foldDown(unroll(item.answer),",
+				"     mapColumn(",
+				"          patientId,",
+				"          item = item.text,",
+				"          answer = item.answer,",
+				"          lastUpdated,",
+				"          id",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flatResult",
+				"flatResult sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'json',",
+				"     fileSystem: 'fhir',",
+				"     folderPath: 'fhir-dev.psi-mis.org/questionnaire_response',",
+				"     truncate: true,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          patientId,",
+				"          item,",
+				"          valueDateTime = answer.valueDateTime,",
+				"          valueDecimal = answer.valueDecimal,",
+				"          valueString = answer.valueString,",
+				"          lastUpdated,",
+				"          id",
+				"     )) ~> sinkCurantes"
+			]
+		}
+	}
+}

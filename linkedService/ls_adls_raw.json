@@ -1,0 +1,18 @@
+{
+	"name": "ls_adls_raw",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://psilake.dfs.core.windows.net/",
+			"accountKey": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "ls_keys_vault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "psilake-raw-key"
+			}
+		}
+	}
+}

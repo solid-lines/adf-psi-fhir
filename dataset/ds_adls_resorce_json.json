@@ -1,0 +1,154 @@
+{
+	"name": "ds_adls_resorce_json",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_raw",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"type2": {
+				"type": "string"
+			},
+			"date": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@concat(dataset().date,'.json')",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@concat('fhir.psi-mis.org/',dataset().type2)",
+					"type": "Expression"
+				},
+				"fileSystem": "fhir"
+			},
+			"encodingName": "UTF-8 without BOM"
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"resourceType": {
+					"type": "string"
+				},
+				"id": {
+					"type": "string"
+				},
+				"meta": {
+					"type": "object",
+					"properties": {
+						"lastUpdated": {
+							"type": "string"
+						}
+					}
+				},
+				"type": {
+					"type": "string"
+				},
+				"total": {
+					"type": "integer"
+				},
+				"link": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"relation": {
+								"type": "string"
+							},
+							"url": {
+								"type": "string"
+							}
+						}
+					}
+				},
+				"entry": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"fullUrl": {
+								"type": "string"
+							},
+							"resource": {
+								"type": "object",
+								"properties": {
+									"resourceType": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									},
+									"meta": {
+										"type": "object",
+										"properties": {
+											"versionId": {
+												"type": "string"
+											},
+											"lastUpdated": {
+												"type": "string"
+											},
+											"source": {
+												"type": "string"
+											}
+										}
+									},
+									"text": {
+										"type": "object",
+										"properties": {
+											"status": {
+												"type": "string"
+											},
+											"div": {
+												"type": "string"
+											}
+										}
+									},
+									"name": {
+										"type": "array",
+										"items": {
+											"type": "object",
+											"properties": {
+												"use": {
+													"type": "string"
+												},
+												"family": {
+													"type": "string"
+												},
+												"given": {
+													"type": "array",
+													"items": {
+														"type": "string"
+													}
+												}
+											}
+										}
+									},
+									"gender": {
+										"type": "string"
+									},
+									"birthDate": {
+										"type": "string"
+									}
+								}
+							},
+							"search": {
+								"type": "object",
+								"properties": {
+									"mode": {
+										"type": "string"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

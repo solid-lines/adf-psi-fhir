@@ -1,0 +1,18 @@
+{
+	"name": "ls_sql",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"connectionString": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=fhir-psi.database.windows.net;Initial Catalog=fhir_dev;User ID=josemp10",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "ls_keys_vault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "psilake-db-superuser-pass"
+			}
+		}
+	}
+}

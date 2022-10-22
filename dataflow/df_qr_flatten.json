@@ -1,0 +1,114 @@
+{
+	"name": "df_qr_flatten",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "ls_adls_curated",
+						"type": "LinkedServiceReference"
+					},
+					"name": "srcQR"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "ls_adls_development",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sinkDevelopment"
+				}
+			],
+			"transformations": [
+				{
+					"name": "unpivotValues"
+				},
+				{
+					"name": "pivotDataValues"
+				},
+				{
+					"name": "selectFields"
+				},
+				{
+					"name": "MapDriftedColumns",
+					"description": "Creates an explicit mapping for each drifted column"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     date as integer",
+				"}",
+				"source(output(",
+				"          id as short,",
+				"          item as string,",
+				"          lastUpdated as string,",
+				"          patientId as short,",
+				"          valueDateTime as string,",
+				"          valueDecimal as string,",
+				"          valueString as string",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'json',",
+				"     fileSystem: 'fhir',",
+				"     documentForm: 'documentPerLine',",
+				"     wildcardPaths:[(concat('fhir.psi-mis.org/QuestionnaireResponse/',toString($date),'/*.json'))]) ~> srcQR",
+				"srcQR unpivot(output(",
+				"          valueType as string,",
+				"          value as string",
+				"     ),",
+				"     ungroupBy(patientId,",
+				"          id,",
+				"          item,",
+				"          lastUpdated),",
+				"     lateral: true,",
+				"     ignoreNullPivots: true) ~> unpivotValues",
+				"selectFields pivot(groupBy(id,",
+				"          lastUpdated,",
+				"          patientId),",
+				"     pivotBy(item),",
+				"     {} = first(value),",
+				"     columnNaming: '$N$V',",
+				"     lateral: true) ~> pivotDataValues",
+				"unpivotValues select(mapColumn(",
+				"          patientId,",
+				"          id,",
+				"          item,",
+				"          lastUpdated,",
+				"          value",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectFields",
+				"pivotDataValues derive({Action Type} = toString(byName('Action Type')),",
+				"          CTA = toString(byName('CTA')),",
+				"          {Duration Seconds} = toString(byName('Duration Seconds')),",
+				"          Encounter = toString(byName('Encounter')),",
+				"          {End DateTime} = toString(byName('End DateTime')),",
+				"          {Have you bought a self test kit?} = toString(byName('Have you bought a self test kit?')),",
+				"          Locale = toString(byName('Locale')),",
+				"          Location = toString(byName('Location')),",
+				"          {Start DateTime} = toString(byName('Start DateTime')),",
+				"          {Where did you buy your test kit from?} = toString(byName('Where did you buy your test kit from?'))) ~> MapDriftedColumns",
+				"MapDriftedColumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'fhir',",
+				"     folderPath: (concat('fhir.psi-mis.org/QuestionnaireResponse/', toString($date),'/')),",
+				"     truncate: true,",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sinkDevelopment"
+			]
+		}
+	}
+}

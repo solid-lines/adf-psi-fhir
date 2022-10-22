@@ -1,0 +1,18 @@
+{
+	"name": "ds_fhir_patient_json",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_fhir_dev_psi_mis_org",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation",
+				"relativeUrl": "Patient?_count=100"
+			}
+		},
+		"schema": {}
+	}
+}

@@ -1,0 +1,61 @@
+{
+	"name": "ds_sql_patient",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sql_prod",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "id",
+				"type": "varchar"
+			},
+			{
+				"name": "birthDate",
+				"type": "date"
+			},
+			{
+				"name": "gender",
+				"type": "varchar"
+			},
+			{
+				"name": "lastUpdated",
+				"type": "date"
+			},
+			{
+				"name": "urn:facebook",
+				"type": "bit"
+			},
+			{
+				"name": "urn:zalo",
+				"type": "bit"
+			},
+			{
+				"name": "urn:google",
+				"type": "bit"
+			},
+			{
+				"name": "telecomPeriod",
+				"type": "varchar"
+			},
+			{
+				"name": "telecomSystem",
+				"type": "varchar"
+			},
+			{
+				"name": "telecomUse",
+				"type": "varchar"
+			},
+			{
+				"name": "telecomValue",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "Patient"
+		}
+	}
+}

@@ -1,0 +1,92 @@
+{
+	"name": "ds_adls_development_qr_csv",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_development",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "fhir.psi-mis.org/QuestionnaireResponse/20220910",
+				"fileSystem": "fhir"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "id",
+				"type": "String"
+			},
+			{
+				"name": "lastUpdated",
+				"type": "String"
+			},
+			{
+				"name": "patientId",
+				"type": "String"
+			},
+			{
+				"name": "-",
+				"type": "String"
+			},
+			{
+				"name": "Action Type",
+				"type": "String"
+			},
+			{
+				"name": "CTA",
+				"type": "String"
+			},
+			{
+				"name": "Duration Seconds",
+				"type": "String"
+			},
+			{
+				"name": "Encounter",
+				"type": "String"
+			},
+			{
+				"name": "End DateTime",
+				"type": "String"
+			},
+			{
+				"name": "Have you bought a self test kit?",
+				"type": "String"
+			},
+			{
+				"name": "Locale",
+				"type": "String"
+			},
+			{
+				"name": "Location",
+				"type": "String"
+			},
+			{
+				"name": "Start DateTime",
+				"type": "String"
+			},
+			{
+				"name": "Where did you buy your test kit from?",
+				"type": "String"
+			},
+			{
+				"name": "test1",
+				"type": "String"
+			},
+			{
+				"name": "test2",
+				"type": "String"
+			},
+			{
+				"name": "test4",
+				"type": "String"
+			}
+		]
+	}
+}

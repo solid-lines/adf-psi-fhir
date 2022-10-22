@@ -1,0 +1,28 @@
+{
+	"name": "ds_adls_patient_json",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_raw",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"date": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@concat(dataset().date,'-patient.json')",
+					"type": "Expression"
+				},
+				"folderPath": "fhir-dev.psi-mis.org/patient",
+				"fileSystem": "fhir"
+			}
+		},
+		"schema": {}
+	}
+}
