@@ -1,0 +1,41 @@
+{
+	"name": "ds_adls_development_survey_csv",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_development",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "*.csv",
+				"folderPath": "fhir.psi-mis.org/Survey/20221028",
+				"fileSystem": "fhir"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "idSurvey",
+				"type": "String"
+			},
+			{
+				"name": "project",
+				"type": "String"
+			},
+			{
+				"name": "country",
+				"type": "String"
+			},
+			{
+				"name": "type",
+				"type": "String"
+			}
+		]
+	}
+}
