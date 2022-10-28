@@ -5,7 +5,20 @@
 			{
 				"name": "Copy Patient",
 				"type": "Copy",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Copy Question",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Copy Survey",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "7.00:00:00",
 					"retry": 0,
@@ -33,7 +46,7 @@
 					},
 					"sink": {
 						"type": "AzureSqlSink",
-						"preCopyScript": "delete from Patient",
+						"preCopyScript": "delete from patient",
 						"writeBehavior": "insert",
 						"sqlWriterUseTableLock": false,
 						"tableOption": "autoCreate",
@@ -51,7 +64,6 @@
 								},
 								"sink": {
 									"name": "id",
-									"type": "String",
 									"physicalType": "varchar"
 								}
 							},
@@ -197,6 +209,235 @@
 				]
 			},
 			{
+				"name": "Copy Question",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": {
+								"value": "@concat('fhir.psi-mis.org/Question/',pipeline().parameters.date)",
+								"type": "Expression"
+							},
+							"wildcardFileName": "*.csv",
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": "delete from question",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"tableOption": "autoCreate",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "idQuestion",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "id",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "item",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "question",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "valueType",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "valueType",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "project",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "project",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "country",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "country",
+									"type": "String",
+									"physicalType": "String"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_adls_development_question_csv",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_question_sql",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "Copy Survey",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": {
+								"value": "@concat('fhir.psi-mis.org/Survey/',pipeline().parameters.date)",
+								"type": "Expression"
+							},
+							"wildcardFileName": "*.csv",
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": "delete from survey",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"tableOption": "autoCreate",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "idSurvey",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "id",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "project",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "project",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "country",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "country",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "type",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "type",
+									"type": "String",
+									"physicalType": "String"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_adls_development_survey_csv",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_survey_sql",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
 				"name": "Copy QR",
 				"type": "Copy",
 				"dependsOn": [
@@ -222,7 +463,7 @@
 							"type": "AzureBlobFSReadSettings",
 							"recursive": true,
 							"wildcardFolderPath": {
-								"value": "@concat('fhir.psi-mis.org/QuestionnaireResponse/',pipeline().parameters.date)",
+								"value": "@concat('fhir.psi-mis.org/v2/QuestionnaireResponse/',pipeline().parameters.date)",
 								"type": "Expression"
 							},
 							"wildcardFileName": "*.csv",
@@ -234,7 +475,6 @@
 					},
 					"sink": {
 						"type": "AzureSqlSink",
-						"preCopyScript": "delete from QuestionnaireResponse",
 						"writeBehavior": "insert",
 						"sqlWriterUseTableLock": false,
 						"tableOption": "autoCreate",
@@ -243,140 +483,6 @@
 					"enableStaging": false,
 					"translator": {
 						"type": "TabularTranslator",
-						"mappings": [
-							{
-								"source": {
-									"name": "id",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "id",
-									"type": "String",
-									"physicalType": "varchar"
-								}
-							},
-							{
-								"source": {
-									"name": "lastUpdated",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "lastUpdated",
-									"type": "DateTime",
-									"physicalType": "date"
-								}
-							},
-							{
-								"source": {
-									"name": "patientId",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "patient_id",
-									"type": "String",
-									"physicalType": "varchar"
-								}
-							},
-							{
-								"source": {
-									"name": "Action Type",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "Action Type",
-									"type": "String",
-									"physicalType": "varchar"
-								}
-							},
-							{
-								"source": {
-									"name": "CTA",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "CTA",
-									"type": "String",
-									"physicalType": "varchar"
-								}
-							},
-							{
-								"source": {
-									"name": "Duration Seconds",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "Duration Seconds",
-									"type": "String",
-									"physicalType": "varchar"
-								}
-							},
-							{
-								"source": {
-									"name": "Encounter",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "Encounter",
-									"type": "String",
-									"physicalType": "varchar"
-								}
-							},
-							{
-								"source": {
-									"name": "End DateTime",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "End DateTime",
-									"type": "DateTime",
-									"physicalType": "datetime"
-								}
-							},
-							{
-								"source": {
-									"name": "Locale",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "Locale",
-									"type": "String",
-									"physicalType": "varchar"
-								}
-							},
-							{
-								"source": {
-									"name": "Location",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "Location",
-									"type": "String",
-									"physicalType": "varchar"
-								}
-							},
-							{
-								"source": {
-									"name": "Start DateTime",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "Start DateTime",
-									"type": "DateTime",
-									"physicalType": "datetime"
-								}
-							}
-						],
 						"typeConversion": true,
 						"typeConversionSettings": {
 							"allowDataTruncation": true,

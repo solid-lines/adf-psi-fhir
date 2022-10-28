@@ -55,7 +55,7 @@
 		],
 		"typeProperties": {
 			"schema": "dbo",
-			"table": "Patient"
+			"table": "patient"
 		}
 	}
 }
