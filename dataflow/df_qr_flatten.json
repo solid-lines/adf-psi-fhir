@@ -19,6 +19,20 @@
 						"type": "LinkedServiceReference"
 					},
 					"name": "sinkDevelopment"
+				},
+				{
+					"linkedService": {
+						"referenceName": "ls_adls_development",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sinkQuestion"
+				},
+				{
+					"linkedService": {
+						"referenceName": "ls_adls_development",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sinkSurvey"
 				}
 			],
 			"transformations": [
@@ -26,14 +40,34 @@
 					"name": "unpivotValues"
 				},
 				{
-					"name": "pivotDataValues"
-				},
-				{
 					"name": "selectFields"
 				},
 				{
-					"name": "MapDriftedColumns",
-					"description": "Creates an explicit mapping for each drifted column"
+					"name": "selectDimensionSurvey"
+				},
+				{
+					"name": "DistinctSurveys"
+				},
+				{
+					"name": "derivedColumnSurveyMetadata"
+				},
+				{
+					"name": "selectDimensionQuestion"
+				},
+				{
+					"name": "DistinctQuestion"
+				},
+				{
+					"name": "idQuestion"
+				},
+				{
+					"name": "lookupIdQuestion"
+				},
+				{
+					"name": "selectFactFields"
+				},
+				{
+					"name": "derivedColumnQuestionMetadata"
 				}
 			],
 			"scriptLines": [
@@ -67,37 +101,56 @@
 				"          lastUpdated),",
 				"     lateral: true,",
 				"     ignoreNullPivots: true) ~> unpivotValues",
-				"selectFields pivot(groupBy(id,",
-				"          lastUpdated,",
-				"          patientId),",
-				"     pivotBy(item),",
-				"     {} = first(value),",
-				"     columnNaming: '$N$V',",
-				"     lateral: true) ~> pivotDataValues",
 				"unpivotValues select(mapColumn(",
 				"          patientId,",
-				"          id,",
+				"          surveyId = id,",
 				"          item,",
 				"          lastUpdated,",
 				"          value",
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> selectFields",
-				"pivotDataValues derive({Action Type} = toString(byName('Action Type')),",
-				"          CTA = toString(byName('CTA')),",
-				"          {Duration Seconds} = toString(byName('Duration Seconds')),",
-				"          Encounter = toString(byName('Encounter')),",
-				"          {End DateTime} = toString(byName('End DateTime')),",
-				"          {Have you bought a self test kit?} = toString(byName('Have you bought a self test kit?')),",
-				"          Locale = toString(byName('Locale')),",
-				"          Location = toString(byName('Location')),",
-				"          {Start DateTime} = toString(byName('Start DateTime')),",
-				"          {Where did you buy your test kit from?} = toString(byName('Where did you buy your test kit from?'))) ~> MapDriftedColumns",
-				"MapDriftedColumns sink(allowSchemaDrift: true,",
+				"unpivotValues select(mapColumn(",
+				"          idSurvey = id",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectDimensionSurvey",
+				"selectDimensionSurvey aggregate(groupBy(idSurvey),",
+				"     each(match(name!='idSurvey'), $$ = first($$))) ~> DistinctSurveys",
+				"DistinctSurveys derive(project = 'AIOI',",
+				"          country = 'Vietnam',",
+				"          type = 'chatbot') ~> derivedColumnSurveyMetadata",
+				"unpivotValues select(mapColumn(",
+				"          item,",
+				"          valueType",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectDimensionQuestion",
+				"selectDimensionQuestion aggregate(groupBy(item),",
+				"     each(match(name!='item'), $$ = first($$))) ~> DistinctQuestion",
+				"DistinctQuestion keyGenerate(output(idQuestion as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> idQuestion",
+				"selectFields, idQuestion lookup(selectFields@item == DistinctQuestion@item,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookupIdQuestion",
+				"lookupIdQuestion select(mapColumn(",
+				"          patientId,",
+				"          surveyId,",
+				"          questionId = idQuestion,",
+				"          value,",
+				"          lastUpdated",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectFactFields",
+				"idQuestion derive(project = 'AIOI',",
+				"          country = 'Vietnam') ~> derivedColumnQuestionMetadata",
+				"selectFactFields sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'delimited',",
 				"     fileSystem: 'fhir',",
-				"     folderPath: (concat('fhir.psi-mis.org/QuestionnaireResponse/', toString($date),'/')),",
+				"     folderPath: (concat('fhir.psi-mis.org/v2/QuestionnaireResponse/', toString($date),'/')),",
 				"     truncate: true,",
 				"     columnDelimiter: ',',",
 				"     escapeChar: '\\\\',",
@@ -107,7 +160,37 @@
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> sinkDevelopment"
+				"     skipDuplicateMapOutputs: true) ~> sinkDevelopment",
+				"derivedColumnQuestionMetadata sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'fhir',",
+				"     folderPath: 'concat(\\'fhir.psi-mis.org/Question/\\', toString($date),\\'/\\')',",
+				"     truncate: true,",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sinkQuestion",
+				"derivedColumnSurveyMetadata sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'fhir',",
+				"     folderPath: 'concat(\\'fhir.psi-mis.org/Survey/\\', toString($date),\\'/\\')',",
+				"     truncate: true,",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sinkSurvey"
 			]
 		}
 	}
