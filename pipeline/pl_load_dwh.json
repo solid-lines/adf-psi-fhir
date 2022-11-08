@@ -475,7 +475,7 @@
 					},
 					"sink": {
 						"type": "AzureSqlSink",
-						"preCopyScript": "delete from questionnarieresponse",
+						"preCopyScript": "delete from QuestionnaireResponse",
 						"writeBehavior": "insert",
 						"sqlWriterUseTableLock": false,
 						"tableOption": "autoCreate",
