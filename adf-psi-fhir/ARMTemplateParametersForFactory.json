@@ -37,6 +37,9 @@
 		},
 		"tr_daily_10am_cet_properties_pl_execution_parameters_date": {
 			"value": "formatDateTime(@trigger.startTime(), 'yyyymmdd')"
+		},
+		"tr_test_properties_pl_execution_parameters_date": {
+			"value": "formatDateTime(@trigger.startTime(), 'yyyymmdd')"
 		}
 	}
 }
