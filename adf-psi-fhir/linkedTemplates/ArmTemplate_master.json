@@ -1,0 +1,139 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-psi-fhir"
+		},
+		"ls_sql_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_sql'"
+		},
+		"ls_sql_prod_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_sql_prod'"
+		},
+		"ls_adls_curated_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://psilakecurated.dfs.core.windows.net/"
+		},
+		"ls_adls_development_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://psilakedevelopment.dfs.core.windows.net/"
+		},
+		"ls_adls_raw_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://psilake.dfs.core.windows.net/"
+		},
+		"ls_fhir_dev_psi_mis_org_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://fhir-dev.psi-mis.org/fhir/"
+		},
+		"ls_fhir_psi_mis_org_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://fhir.psi-mis.org/fhir/"
+		},
+		"ls_fhir_psi_mis_org_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "admin"
+		},
+		"ls_keys_fhir_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://psi-fhir.vault.azure.net/"
+		},
+		"ls_keys_vault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://psilake-keys.vault.azure.net/"
+		},
+		"tr_daily_10am_cet_properties_pl_execution_parameters_date": {
+			"type": "string",
+			"defaultValue": "formatDateTime(@trigger.startTime(), 'yyyymmdd')"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "adf-psi-fhir_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"ls_sql_connectionString": {
+						"value": "[parameters('ls_sql_connectionString')]"
+					},
+					"ls_sql_prod_connectionString": {
+						"value": "[parameters('ls_sql_prod_connectionString')]"
+					},
+					"ls_fhir_dev_psi_mis_org_properties_typeProperties_url": {
+						"value": "[parameters('ls_fhir_dev_psi_mis_org_properties_typeProperties_url')]"
+					},
+					"ls_keys_fhir_properties_typeProperties_baseUrl": {
+						"value": "[parameters('ls_keys_fhir_properties_typeProperties_baseUrl')]"
+					},
+					"ls_keys_vault_properties_typeProperties_baseUrl": {
+						"value": "[parameters('ls_keys_vault_properties_typeProperties_baseUrl')]"
+					},
+					"ls_adls_curated_properties_typeProperties_url": {
+						"value": "[parameters('ls_adls_curated_properties_typeProperties_url')]"
+					},
+					"ls_adls_development_properties_typeProperties_url": {
+						"value": "[parameters('ls_adls_development_properties_typeProperties_url')]"
+					},
+					"ls_adls_raw_properties_typeProperties_url": {
+						"value": "[parameters('ls_adls_raw_properties_typeProperties_url')]"
+					},
+					"ls_fhir_psi_mis_org_properties_typeProperties_url": {
+						"value": "[parameters('ls_fhir_psi_mis_org_properties_typeProperties_url')]"
+					},
+					"ls_fhir_psi_mis_org_properties_typeProperties_userName": {
+						"value": "[parameters('ls_fhir_psi_mis_org_properties_typeProperties_userName')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "adf-psi-fhir_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"tr_daily_10am_cet_properties_pl_execution_parameters_date": {
+						"value": "[parameters('tr_daily_10am_cet_properties_pl_execution_parameters_date')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'adf-psi-fhir_ArmTemplate_0')]"
+			]
+		}
+	]
+}

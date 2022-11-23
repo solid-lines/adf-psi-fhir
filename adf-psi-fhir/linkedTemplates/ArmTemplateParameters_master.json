@@ -1,0 +1,48 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adf-psi-fhir"
+		},
+		"ls_sql_connectionString": {
+			"value": ""
+		},
+		"ls_sql_prod_connectionString": {
+			"value": ""
+		},
+		"ls_adls_curated_properties_typeProperties_url": {
+			"value": "https://psilakecurated.dfs.core.windows.net/"
+		},
+		"ls_adls_development_properties_typeProperties_url": {
+			"value": "https://psilakedevelopment.dfs.core.windows.net/"
+		},
+		"ls_adls_raw_properties_typeProperties_url": {
+			"value": "https://psilake.dfs.core.windows.net/"
+		},
+		"ls_fhir_dev_psi_mis_org_properties_typeProperties_url": {
+			"value": "https://fhir-dev.psi-mis.org/fhir/"
+		},
+		"ls_fhir_psi_mis_org_properties_typeProperties_url": {
+			"value": "https://fhir.psi-mis.org/fhir/"
+		},
+		"ls_fhir_psi_mis_org_properties_typeProperties_userName": {
+			"value": "admin"
+		},
+		"ls_keys_fhir_properties_typeProperties_baseUrl": {
+			"value": "https://psi-fhir.vault.azure.net/"
+		},
+		"ls_keys_vault_properties_typeProperties_baseUrl": {
+			"value": "https://psilake-keys.vault.azure.net/"
+		},
+		"tr_daily_10am_cet_properties_pl_execution_parameters_date": {
+			"value": "formatDateTime(@trigger.startTime(), 'yyyymmdd')"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
