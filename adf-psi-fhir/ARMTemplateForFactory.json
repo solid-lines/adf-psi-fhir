@@ -53,7 +53,7 @@
 		},
 		"tr_test_properties_pl_execution_parameters_date": {
 			"type": "string",
-			"defaultValue": "formatDateTime(@trigger().startTime,'yyyymmdd')"
+			"defaultValue": "@trigger().startTime"
 		}
 	},
 	"variables": {
@@ -1366,7 +1366,7 @@
 					"location": {
 						"type": "AzureBlobFSLocation",
 						"fileName": {
-							"value": "@concat(dataset().date,'.json')",
+							"value": "@concat(formatDateTime(dataset().date,'yyyymmdd'),'.json')\n\n",
 							"type": "Expression"
 						},
 						"folderPath": "fhir",
@@ -2242,6 +2242,38 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/tr_test')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pl_execution",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"date": "[parameters('tr_test_properties_pl_execution_parameters_date')]"
+						}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Hour",
+						"interval": 24,
+						"startTime": "2022-11-23T10:45:00",
+						"timeZone": "SE Asia Standard Time"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_execution')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -3019,38 +3051,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/ls_adls_raw')]",
 				"[concat(variables('factoryId'), '/linkedServices/ls_adls_curated')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/tr_test')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Started",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "pl_execution",
-							"type": "PipelineReference"
-						},
-						"parameters": {
-							"date": "[parameters('tr_test_properties_pl_execution_parameters_date')]"
-						}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Hour",
-						"interval": 24,
-						"startTime": "2022-11-23T10:35:00",
-						"timeZone": "SE Asia Standard Time"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/pl_execution')]"
 			]
 		}
 	]

@@ -300,7 +300,7 @@
 					"location": {
 						"type": "AzureBlobFSLocation",
 						"fileName": {
-							"value": "@concat(dataset().date,'.json')",
+							"value": "@concat(formatDateTime(dataset().date,'yyyymmdd'),'.json')\n\n",
 							"type": "Expression"
 						},
 						"folderPath": "fhir",
