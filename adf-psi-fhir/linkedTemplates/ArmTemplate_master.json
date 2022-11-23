@@ -53,7 +53,7 @@
 		},
 		"tr_test_properties_pl_execution_parameters_date": {
 			"type": "string",
-			"defaultValue": "trigger.startTime()"
+			"defaultValue": "@trigger().startTime"
 		},
 		"containerUri": {
 			"type": "string",
