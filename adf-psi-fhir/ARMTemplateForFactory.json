@@ -1647,7 +1647,7 @@
 					"location": {
 						"type": "AzureBlobFSLocation",
 						"fileName": {
-							"value": "@concat(dataset().date,'.json')",
+							"value": "@concat(formatDateTime(dataset().date,'yyyyMMdd'),'.json')\n",
 							"type": "Expression"
 						},
 						"folderPath": {
