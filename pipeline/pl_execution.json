@@ -15,7 +15,7 @@
 					"waitOnCompletion": true,
 					"parameters": {
 						"date": {
-							"value": "@formatDateTime(pipeline().parameters.date,'yyyyMMdd')",
+							"value": "@pipeline().parameters.date",
 							"type": "Expression"
 						}
 					}
