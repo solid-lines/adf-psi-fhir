@@ -53,7 +53,7 @@
 		},
 		"tr_test_properties_pl_execution_parameters_date": {
 			"type": "string",
-			"defaultValue": "@trigger().startTime"
+			"defaultValue": "@formatDateTime(trigger().startTime,'yyyyMMdd')"
 		}
 	},
 	"variables": {
@@ -79,7 +79,7 @@
 							"waitOnCompletion": true,
 							"parameters": {
 								"date": {
-									"value": "@formatDateTime(pipeline().parameters.date,'yyyyMMdd')",
+									"value": "@pipeline().parameters.date",
 									"type": "Expression"
 								}
 							}
@@ -2264,7 +2264,7 @@
 					"recurrence": {
 						"frequency": "Hour",
 						"interval": 24,
-						"startTime": "2022-11-23T11:24:00",
+						"startTime": "2022-11-23T11:29:00",
 						"timeZone": "SE Asia Standard Time"
 					}
 				}
