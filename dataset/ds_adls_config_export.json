@@ -16,7 +16,7 @@
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"fileName": {
-					"value": "@concat(formatDateTime(dataset().date,'yyyymmdd'),'.json')\n\n",
+					"value": "@concat(formatDateTime(dataset().date,'yyyyMMdd'),'.json')\n\n",
 					"type": "Expression"
 				},
 				"folderPath": "fhir",
