@@ -39,7 +39,7 @@
 			"value": "formatDateTime(@trigger.startTime(), 'yyyymmdd')"
 		},
 		"tr_test_properties_pl_execution_parameters_date": {
-			"value": "@trigger().startTime"
+			"value": "formatDateTime(@trigger().startTime,'yyyymmdd')"
 		},
 		"containerUri": {
 			"value": ""

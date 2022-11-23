@@ -53,7 +53,7 @@
 		},
 		"tr_test_properties_pl_execution_parameters_date": {
 			"type": "string",
-			"defaultValue": "@trigger().startTime"
+			"defaultValue": "formatDateTime(@trigger().startTime,'yyyymmdd')"
 		}
 	},
 	"variables": {
@@ -3044,7 +3044,7 @@
 					"recurrence": {
 						"frequency": "Hour",
 						"interval": 24,
-						"startTime": "2022-11-23T10:30:00",
+						"startTime": "2022-11-23T10:35:00",
 						"timeZone": "SE Asia Standard Time"
 					}
 				}
