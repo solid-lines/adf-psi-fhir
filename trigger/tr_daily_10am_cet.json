@@ -2,7 +2,7 @@
 	"name": "tr_daily_10am_cet",
 	"properties": {
 		"annotations": [],
-		"runtimeState": "Started",
+		"runtimeState": "Stopped",
 		"pipelines": [
 			{
 				"pipelineReference": {
