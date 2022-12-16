@@ -6,10 +6,10 @@
 			"value": "adf-psi-fhir"
 		},
 		"ls_sql_connectionString": {
-			"value": ""
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=fhir-psi.database.windows.net;Initial Catalog=fhir_dev;User ID=josemp10"
 		},
 		"ls_sql_prod_connectionString": {
-			"value": ""
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=fhir-psi.database.windows.net;Initial Catalog=fhir_prod;User ID=josemp10"
 		},
 		"ls_adls_curated_properties_typeProperties_url": {
 			"value": "https://psilakecurated.dfs.core.windows.net/"
@@ -34,12 +34,6 @@
 		},
 		"ls_keys_vault_properties_typeProperties_baseUrl": {
 			"value": "https://psilake-keys.vault.azure.net/"
-		},
-		"tr_daily_10am_cet_properties_pl_execution_parameters_date": {
-			"value": "formatDateTime(@trigger.startTime(), 'yyyymmdd')"
-		},
-		"tr_test_properties_pl_execution_parameters_date": {
-			"value": "@formatDateTime(trigger().startTime,'yyyyMMdd')"
 		},
 		"containerUri": {
 			"value": ""
