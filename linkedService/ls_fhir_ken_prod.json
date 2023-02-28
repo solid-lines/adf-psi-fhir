@@ -1,0 +1,22 @@
+{
+	"name": "ls_fhir_ken_prod",
+	"properties": {
+		"annotations": [],
+		"type": "HttpServer",
+		"typeProperties": {
+			"url": "https://fhir.ken.psi-connect.org/",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Basic",
+			"userName": "admin",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "ls_keys_fhir",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "fhir-ken-prod",
+				"secretVersion": "59ce62e59d5b478c85ec6973b0ce5816"
+			}
+		}
+	}
+}
