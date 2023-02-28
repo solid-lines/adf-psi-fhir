@@ -19,7 +19,7 @@
 					"value": "@concat(dataset().date,'.json')",
 					"type": "Expression"
 				},
-				"folderPath": "fhir",
+				"folderPath": "fhir/kenya/prod/20230228",
 				"fileSystem": "configs"
 			}
 		},

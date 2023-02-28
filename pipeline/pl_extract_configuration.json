@@ -15,7 +15,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"url": "https://fhir.psi-mis.org/fhir/$export?_type=Patient,QuestionnaireResponse",
+					"url": "https://fhir.ken.psi-connect.org/$export?_type=Patient,QuestionnaireResponse",
 					"method": "GET",
 					"headers": {
 						"Prefer": "respond-async"
@@ -29,7 +29,7 @@
 								"referenceName": "ls_keys_fhir",
 								"type": "LinkedServiceReference"
 							},
-							"secretName": "fhir-vn"
+							"secretName": "fhir-ken-prod"
 						}
 					}
 				}
