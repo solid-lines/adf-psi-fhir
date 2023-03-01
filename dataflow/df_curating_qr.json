@@ -62,7 +62,7 @@
 				"     format: 'json',",
 				"     fileSystem: 'fhir',",
 				"     documentForm: 'arrayOfDocuments',",
-				"     wildcardPaths:['fhir.ken.psi-connect.org/QuestionnaireResponse/20230228.json']) ~> srcQR",
+				"     wildcardPaths:['**/QuestionnaireResponse/20230228.json']) ~> srcQR",
 				"srcQR select(mapColumn(",
 				"          id,",
 				"          item,",
