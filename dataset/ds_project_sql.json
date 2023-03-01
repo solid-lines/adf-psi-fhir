@@ -1,0 +1,15 @@
+{
+	"name": "ds_project_sql",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sql_prod",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"table": "project"
+		}
+	}
+}
