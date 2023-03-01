@@ -64,7 +64,8 @@
 								},
 								"sink": {
 									"name": "id",
-									"physicalType": "varchar"
+									"type": "Int32",
+									"physicalType": "int"
 								}
 							},
 							{
@@ -75,8 +76,8 @@
 								},
 								"sink": {
 									"name": "birthDate",
-									"type": "DateTime",
-									"physicalType": "date"
+									"type": "String",
+									"physicalType": "varchar"
 								}
 							},
 							{
@@ -99,8 +100,8 @@
 								},
 								"sink": {
 									"name": "lastUpdated",
-									"type": "DateTime",
-									"physicalType": "date"
+									"type": "String",
+									"physicalType": "varchar"
 								}
 							},
 							{
@@ -111,8 +112,8 @@
 								},
 								"sink": {
 									"name": "urn:facebook",
-									"type": "Boolean",
-									"physicalType": "bit"
+									"type": "String",
+									"physicalType": "varchar"
 								}
 							},
 							{
@@ -123,8 +124,8 @@
 								},
 								"sink": {
 									"name": "urn:zalo",
-									"type": "Boolean",
-									"physicalType": "bit"
+									"type": "String",
+									"physicalType": "varchar"
 								}
 							},
 							{
@@ -135,18 +136,6 @@
 								},
 								"sink": {
 									"name": "urn:google",
-									"type": "Boolean",
-									"physicalType": "bit"
-								}
-							},
-							{
-								"source": {
-									"name": "telecomPeriod",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "telecomPeriod",
 									"type": "String",
 									"physicalType": "varchar"
 								}
