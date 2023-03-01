@@ -15,7 +15,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"url": "https://fhir.ken.psi-connect.org/$export?_type=Patient,QuestionnaireResponse",
+					"url": "https://fhir.ken.psi-connect.org/fhir/$export?_type=Patient,QuestionnaireResponse",
 					"method": "GET",
 					"headers": {
 						"Prefer": "respond-async"
