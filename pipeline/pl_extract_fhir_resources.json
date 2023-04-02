@@ -110,12 +110,16 @@
 									"referenceName": "ds_adls_resorce_json",
 									"type": "DatasetReference",
 									"parameters": {
-										"type2": {
+										"typeResource": {
 											"value": "@item().type",
 											"type": "Expression"
 										},
 										"date": {
 											"value": "@pipeline().parameters.date",
+											"type": "Expression"
+										},
+										"id": {
+											"value": "@last(split(item().url,'/'))",
 											"type": "Expression"
 										}
 									}

@@ -6,10 +6,13 @@
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
-			"type2": {
+			"typeResource": {
 				"type": "string"
 			},
 			"date": {
+				"type": "string"
+			},
+			"id": {
 				"type": "string"
 			}
 		},
@@ -19,11 +22,11 @@
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"fileName": {
-					"value": "@concat(dataset().date,'.json')",
+					"value": "@concat(dataset().date,'_',dataset().id,'.json')",
 					"type": "Expression"
 				},
 				"folderPath": {
-					"value": "@concat('fhir.ken.psi-connect.org/',dataset().type2)",
+					"value": "@concat('fhir.ken.psi-connect.org/',dataset().typeResource)",
 					"type": "Expression"
 				},
 				"fileSystem": "fhir"
