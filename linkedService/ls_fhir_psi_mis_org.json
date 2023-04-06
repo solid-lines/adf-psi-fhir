@@ -4,7 +4,7 @@
 		"annotations": [],
 		"type": "HttpServer",
 		"typeProperties": {
-			"url": "https://fhir.psi-mis.org/fhir/",
+			"url": "https://fhir.vnm.psi-connect.org/fhir/",
 			"enableServerCertificateValidation": true,
 			"authenticationType": "Basic",
 			"userName": "admin",
