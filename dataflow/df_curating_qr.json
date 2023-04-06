@@ -54,7 +54,7 @@
 				"     format: 'json',",
 				"     fileSystem: 'fhir',",
 				"     documentForm: 'arrayOfDocuments',",
-				"     wildcardPaths:[(concat('fhir.psi-mis.org/QuestionnaireResponse/',toString($date),'*.json'))]) ~> srcQR",
+				"     wildcardPaths:[(concat('v1/fhir.vnm.psi-connect.org/',substring(toString($date),0,4),'/',substring(toString($date),5,2),'/','QuestionnaireResponse/',toString($date),'*.json'))]) ~> srcQR",
 				"srcQR select(mapColumn(",
 				"          id,",
 				"          item,",
