@@ -165,7 +165,7 @@
 				"parameters": {
 					"date": {
 						"type": "string",
-						"defaultValue": "trigger().startTime"
+						"defaultValue": "@pipeline().TriggerTime"
 					}
 				},
 				"annotations": []
@@ -2235,7 +2235,7 @@
 					"recurrence": {
 						"frequency": "Hour",
 						"interval": 24,
-						"startTime": "2022-10-22T21:30:00",
+						"startTime": "2022-10-22T21:35:00",
 						"timeZone": "Romance Standard Time"
 					}
 				}
