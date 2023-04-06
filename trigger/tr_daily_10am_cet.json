@@ -10,7 +10,7 @@
 					"type": "PipelineReference"
 				},
 				"parameters": {
-					"date": "@pipeline().TriggerTime"
+					"date": "@@formatDateTime(pipeline().TriggerTime,'yyyyMMdd')"
 				}
 			}
 		],

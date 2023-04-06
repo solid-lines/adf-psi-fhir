@@ -102,8 +102,7 @@
 		],
 		"parameters": {
 			"date": {
-				"type": "string",
-				"defaultValue": "@formatDateTime(utcnow(), 'yyyyMMdd')"
+				"type": "string"
 			}
 		},
 		"annotations": []
