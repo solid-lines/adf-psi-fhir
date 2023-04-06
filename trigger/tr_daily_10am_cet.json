@@ -8,9 +8,6 @@
 				"pipelineReference": {
 					"referenceName": "pl_execution",
 					"type": "PipelineReference"
-				},
-				"parameters": {
-					"date": "@pipeline().TriggerTime"
 				}
 			}
 		],
@@ -19,7 +16,7 @@
 			"recurrence": {
 				"frequency": "Hour",
 				"interval": 24,
-				"startTime": "2022-10-22T21:12:00",
+				"startTime": "2022-10-22T21:17:00",
 				"timeZone": "Romance Standard Time"
 			}
 		}
