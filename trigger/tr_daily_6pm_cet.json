@@ -1,5 +1,5 @@
 {
-	"name": "tr_daily_10am_cet",
+	"name": "tr_daily_6pm_cet",
 	"properties": {
 		"annotations": [],
 		"runtimeState": "Started",
@@ -19,7 +19,7 @@
 			"recurrence": {
 				"frequency": "Hour",
 				"interval": 24,
-				"startTime": "2022-10-22T21:48:00",
+				"startTime": "2022-10-22T18:00:00",
 				"timeZone": "Romance Standard Time"
 			}
 		}
