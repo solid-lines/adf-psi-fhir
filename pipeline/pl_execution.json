@@ -103,7 +103,7 @@
 		"parameters": {
 			"date": {
 				"type": "string",
-				"defaultValue": "trigger().startTime"
+				"defaultValue": "@pipeline().TriggerTime"
 			}
 		},
 		"annotations": []
