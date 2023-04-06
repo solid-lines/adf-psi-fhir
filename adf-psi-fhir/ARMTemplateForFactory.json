@@ -49,7 +49,7 @@
 			"type": "string",
 			"defaultValue": "https://psilake-keys.vault.azure.net/"
 		},
-		"tr_daily_10am_cet_properties_pl_execution_parameters_date": {
+		"tr_daily_6pm_cet_properties_pl_execution_parameters_date": {
 			"type": "string",
 			"defaultValue": "@trigger().startTime"
 		}
@@ -2218,7 +2218,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/tr_daily_10am_cet')]",
+			"name": "[concat(parameters('factoryName'), '/tr_daily_6pm_cet')]",
 			"type": "Microsoft.DataFactory/factories/triggers",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -2231,7 +2231,7 @@
 							"type": "PipelineReference"
 						},
 						"parameters": {
-							"date": "[parameters('tr_daily_10am_cet_properties_pl_execution_parameters_date')]"
+							"date": "[parameters('tr_daily_6pm_cet_properties_pl_execution_parameters_date')]"
 						}
 					}
 				],
@@ -2240,7 +2240,7 @@
 					"recurrence": {
 						"frequency": "Hour",
 						"interval": 24,
-						"startTime": "2022-10-22T21:48:00",
+						"startTime": "2022-10-22T18:00:00",
 						"timeZone": "Romance Standard Time"
 					}
 				}
