@@ -8,6 +8,9 @@
 				"pipelineReference": {
 					"referenceName": "pl_execution",
 					"type": "PipelineReference"
+				},
+				"parameters": {
+					"date": "@pipeline().TriggerTime"
 				}
 			}
 		],
