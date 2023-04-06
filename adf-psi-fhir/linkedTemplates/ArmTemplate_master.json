@@ -49,6 +49,10 @@
 			"type": "string",
 			"defaultValue": "https://psilake-keys.vault.azure.net/"
 		},
+		"tr_daily_10am_cet_properties_pl_execution_parameters_date": {
+			"type": "string",
+			"defaultValue": "@trigger().startTime"
+		},
 		"containerUri": {
 			"type": "string",
 			"metadata": "URI to storage account containing linked ARM templates"
@@ -123,6 +127,9 @@
 				"parameters": {
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
+					},
+					"tr_daily_10am_cet_properties_pl_execution_parameters_date": {
+						"value": "[parameters('tr_daily_10am_cet_properties_pl_execution_parameters_date')]"
 					}
 				}
 			},

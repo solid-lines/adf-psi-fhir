@@ -48,6 +48,10 @@
 		"ls_keys_vault_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://psilake-keys.vault.azure.net/"
+		},
+		"tr_daily_10am_cet_properties_pl_execution_parameters_date": {
+			"type": "string",
+			"defaultValue": "@trigger().startTime"
 		}
 	},
 	"variables": {
@@ -164,8 +168,7 @@
 				},
 				"parameters": {
 					"date": {
-						"type": "string",
-						"defaultValue": "@pipeline().TriggerTime"
+						"type": "string"
 					}
 				},
 				"annotations": []
@@ -2227,7 +2230,9 @@
 							"referenceName": "pl_execution",
 							"type": "PipelineReference"
 						},
-						"parameters": {}
+						"parameters": {
+							"date": "[parameters('tr_daily_10am_cet_properties_pl_execution_parameters_date')]"
+						}
 					}
 				],
 				"type": "ScheduleTrigger",
@@ -2235,7 +2240,7 @@
 					"recurrence": {
 						"frequency": "Hour",
 						"interval": 24,
-						"startTime": "2022-10-22T21:35:00",
+						"startTime": "2022-10-22T21:39:00",
 						"timeZone": "Romance Standard Time"
 					}
 				}
