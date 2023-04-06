@@ -51,7 +51,7 @@
 		},
 		"tr_daily_10am_cet_properties_pl_execution_parameters_date": {
 			"type": "string",
-			"defaultValue": "@formatDateTime(pipeline().TriggerTime,'yyyyMMdd')"
+			"defaultValue": "@pipeline().TriggerTime"
 		}
 	},
 	"variables": {
@@ -2240,7 +2240,7 @@
 					"recurrence": {
 						"frequency": "Hour",
 						"interval": 24,
-						"startTime": "2022-10-22T21:09:00",
+						"startTime": "2022-10-22T21:12:00",
 						"timeZone": "Romance Standard Time"
 					}
 				}

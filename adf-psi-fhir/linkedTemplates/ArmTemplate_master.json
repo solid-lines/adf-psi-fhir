@@ -51,7 +51,7 @@
 		},
 		"tr_daily_10am_cet_properties_pl_execution_parameters_date": {
 			"type": "string",
-			"defaultValue": "@formatDateTime(pipeline().TriggerTime,'yyyyMMdd')"
+			"defaultValue": "@pipeline().TriggerTime"
 		},
 		"containerUri": {
 			"type": "string",
