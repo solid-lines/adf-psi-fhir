@@ -34,9 +34,6 @@
 		},
 		"ls_keys_vault_properties_typeProperties_baseUrl": {
 			"value": "https://psilake-keys.vault.azure.net/"
-		},
-		"tr_daily_10am_cet_properties_pl_execution_parameters_date": {
-			"value": "@pipeline().TriggerTime"
 		}
 	}
 }
