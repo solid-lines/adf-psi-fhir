@@ -2,8 +2,18 @@
 	"name": "tr_daily_10am_cet",
 	"properties": {
 		"annotations": [],
-		"runtimeState": "Stopped",
-		"pipelines": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "pl_execution",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"date": "@pipeline().TriggerTime"
+				}
+			}
+		],
 		"type": "ScheduleTrigger",
 		"typeProperties": {
 			"recurrence": {
