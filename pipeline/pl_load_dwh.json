@@ -21,7 +21,7 @@
 							"type": "AzureBlobFSReadSettings",
 							"recursive": true,
 							"wildcardFolderPath": {
-								"value": "@concat('fhir.psi-mis.org/Patient/',pipeline().parameters.date)",
+								"value": "@concat('v1/fhir.vnm.psi-connect.org/',substring(pipeline().parameters.date,0,4),'/',substring(pipeline().parameters.date,4,2),'/','Patient/',pipeline().parameters.date)\n\n",
 								"type": "Expression"
 							},
 							"wildcardFileName": "*.csv",
@@ -222,7 +222,7 @@
 							"type": "AzureBlobFSReadSettings",
 							"recursive": true,
 							"wildcardFolderPath": {
-								"value": "@concat('fhir.psi-mis.org/QuestionnaireResponse/',pipeline().parameters.date)",
+								"value": "@concat('v1/fhir.vnm.psi-connect.org/',substring(pipeline().parameters.date,0,4),'/',substring(pipeline().parameters.date,4,2),'/','QuestionnaireResponse/',pipeline().parameters.date)",
 								"type": "Expression"
 							},
 							"wildcardFileName": "*.csv",
