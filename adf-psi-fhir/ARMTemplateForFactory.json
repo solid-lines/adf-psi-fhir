@@ -103,7 +103,7 @@
 							"waitOnCompletion": true,
 							"parameters": {
 								"date": {
-									"value": "@pipeline().parameters.date",
+									"value": "@formatDateTime(pipeline().parameters.date,'yyyyMMdd')",
 									"type": "Expression"
 								}
 							}
@@ -129,7 +129,7 @@
 							"waitOnCompletion": true,
 							"parameters": {
 								"date": {
-									"value": "@pipeline().parameters.date",
+									"value": "@formatDateTime(pipeline().parameters.date,'yyyyMMdd')",
 									"type": "Expression"
 								}
 							}
@@ -155,7 +155,7 @@
 							"waitOnCompletion": true,
 							"parameters": {
 								"date": {
-									"value": "@pipeline().parameters.date",
+									"value": "@formatDateTime(pipeline().parameters.date,'yyyyMMdd')",
 									"type": "Expression"
 								}
 							}
@@ -2240,7 +2240,7 @@
 					"recurrence": {
 						"frequency": "Hour",
 						"interval": 24,
-						"startTime": "2022-10-22T21:44:00",
+						"startTime": "2022-10-22T21:48:00",
 						"timeZone": "Romance Standard Time"
 					}
 				}
