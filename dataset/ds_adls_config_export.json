@@ -19,7 +19,7 @@
 					"value": "@concat(dataset().date,'.json')\n",
 					"type": "Expression"
 				},
-				"folderPath": "fhir",
+				"folderPath": "fhir/v1",
 				"fileSystem": "configs"
 			}
 		},
