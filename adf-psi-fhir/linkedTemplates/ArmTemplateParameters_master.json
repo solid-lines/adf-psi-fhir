@@ -24,7 +24,7 @@
 			"value": "https://fhir-dev.psi-mis.org/fhir/"
 		},
 		"ls_fhir_psi_mis_org_properties_typeProperties_url": {
-			"value": "https://fhir.psi-mis.org/fhir/"
+			"value": "https://fhir.vnm.psi-connect.org/fhir/"
 		},
 		"ls_fhir_psi_mis_org_properties_typeProperties_userName": {
 			"value": "admin"

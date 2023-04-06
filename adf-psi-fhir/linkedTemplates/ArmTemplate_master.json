@@ -35,7 +35,7 @@
 		},
 		"ls_fhir_psi_mis_org_properties_typeProperties_url": {
 			"type": "string",
-			"defaultValue": "https://fhir.psi-mis.org/fhir/"
+			"defaultValue": "https://fhir.vnm.psi-connect.org/fhir/"
 		},
 		"ls_fhir_psi_mis_org_properties_typeProperties_userName": {
 			"type": "string",

@@ -35,7 +35,7 @@
 		},
 		"ls_fhir_psi_mis_org_properties_typeProperties_url": {
 			"type": "string",
-			"defaultValue": "https://fhir.psi-mis.org/fhir/"
+			"defaultValue": "https://fhir.vnm.psi-connect.org/fhir/"
 		},
 		"ls_fhir_psi_mis_org_properties_typeProperties_userName": {
 			"type": "string",
@@ -164,7 +164,8 @@
 				},
 				"parameters": {
 					"date": {
-						"type": "string"
+						"type": "string",
+						"defaultValue": "@formatDateTime(utcnow(), 'yyyyMMdd')"
 					}
 				},
 				"annotations": []
@@ -195,7 +196,7 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"url": "https://fhir.psi-mis.org/fhir/$export?_type=Patient,QuestionnaireResponse",
+							"url": "https://fhir.vnm.psi-connect.org/fhir/$export?_type=Patient,QuestionnaireResponse",
 							"method": "GET",
 							"headers": {
 								"Prefer": "respond-async"
@@ -437,12 +438,16 @@
 											"referenceName": "ds_adls_resorce_json",
 											"type": "DatasetReference",
 											"parameters": {
-												"type2": {
+												"typeResource": {
 													"value": "@item().type",
 													"type": "Expression"
 												},
 												"date": {
 													"value": "@pipeline().parameters.date",
+													"type": "Expression"
+												},
+												"id": {
+													"value": "@last(split(item().url,'/'))",
 													"type": "Expression"
 												}
 											}
@@ -655,7 +660,7 @@
 									"type": "AzureBlobFSReadSettings",
 									"recursive": true,
 									"wildcardFolderPath": {
-										"value": "@concat('fhir.psi-mis.org/Patient/',pipeline().parameters.date)",
+										"value": "@concat('v1/fhir.vnm.psi-connect.org/',substring(pipeline().parameters.date,0,4),'/',substring(pipeline().parameters.date,4,2),'/','Patient/',pipeline().parameters.date)\n\n",
 										"type": "Expression"
 									},
 									"wildcardFileName": "*.csv",
@@ -858,7 +863,7 @@
 									"type": "AzureBlobFSReadSettings",
 									"recursive": true,
 									"wildcardFolderPath": {
-										"value": "@concat('fhir.psi-mis.org/QuestionnaireResponse/',pipeline().parameters.date)",
+										"value": "@concat('v1/fhir.vnm.psi-connect.org/',substring(pipeline().parameters.date,0,4),'/',substring(pipeline().parameters.date,4,2),'/','QuestionnaireResponse/',pipeline().parameters.date)",
 										"type": "Expression"
 									},
 									"wildcardFileName": "*.csv",
@@ -1363,7 +1368,10 @@
 							"value": "@concat(dataset().date,'.json')\n",
 							"type": "Expression"
 						},
-						"folderPath": "fhir",
+						"folderPath": {
+							"value": "@concat('fhir/v1/',substring(dataset().date,0,4),'/',substring(dataset().date,4,2))",
+							"type": "Expression"
+						},
 						"fileSystem": "configs"
 					}
 				},
@@ -1628,10 +1636,13 @@
 					"type": "LinkedServiceReference"
 				},
 				"parameters": {
-					"type2": {
+					"typeResource": {
 						"type": "string"
 					},
 					"date": {
+						"type": "string"
+					},
+					"id": {
 						"type": "string"
 					}
 				},
@@ -1641,11 +1652,11 @@
 					"location": {
 						"type": "AzureBlobFSLocation",
 						"fileName": {
-							"value": "@concat(dataset().date,'.json')",
+							"value": "@concat(dataset().date,'_',dataset().id,'.json')",
 							"type": "Expression"
 						},
 						"folderPath": {
-							"value": "@concat('fhir.psi-mis.org/',dataset().type2)",
+							"value": "@concat('v1/fhir.vnm.psi-connect.org/',substring(dataset().date,0,4),'/',substring(dataset().date,4,2),'/',dataset().typeResource)",
 							"type": "Expression"
 						},
 						"fileSystem": "fhir"
@@ -2209,19 +2220,29 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Stopped",
-				"pipelines": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pl_execution",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
 				"type": "ScheduleTrigger",
 				"typeProperties": {
 					"recurrence": {
 						"frequency": "Hour",
 						"interval": 24,
-						"startTime": "2022-10-22T04:00:00",
+						"startTime": "2022-10-22T21:02:00",
 						"timeZone": "Romance Standard Time"
 					}
 				}
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_execution')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/tr_test')]",
@@ -2417,9 +2438,8 @@
 						"     ignoreNoFilesFound: false,",
 						"     format: 'json',",
 						"     fileSystem: 'fhir',",
-						"     folderPath: 'fhir.psi-mis.org/QuestionnaireResponse',",
-						"     fileName: (concat(toString($date),'.json')),",
-						"     documentForm: 'arrayOfDocuments') ~> srcQR",
+						"     documentForm: 'arrayOfDocuments',",
+						"     wildcardPaths:[(concat('v1/fhir.vnm.psi-connect.org/',substring(toString($date),0,4),'/',substring(toString($date),5,2),'/','QuestionnaireResponse/',toString($date),'*.json'))]) ~> srcQR",
 						"srcQR select(mapColumn(",
 						"          id,",
 						"          item,",
@@ -2455,7 +2475,7 @@
 						"     validateSchema: false,",
 						"     format: 'json',",
 						"     fileSystem: 'fhir',",
-						"     folderPath: (concat('fhir.psi-mis.org/QuestionnaireResponse/',toString($date))),",
+						"     folderPath: (concat('v1/fhir.vnm.psi-connect.org/',substring(toString($date),0,4),'/',substring(toString($date),5,2),'/','QuestionnaireResponse/',toString($date))),",
 						"     truncate: true,",
 						"     umask: 0022,",
 						"     preCommands: [],",
@@ -2690,17 +2710,15 @@
 						"}",
 						"source(output(",
 						"          active as boolean,",
-						"          address as (city as string, country as string, line as string[], postalCode as integer, state as string)[],",
 						"          birthDate as date,",
-						"          communication as (language as (coding as (code as string, display as string, system as string)[], text as string), preferred as boolean)[],",
-						"          extension as (url as string, valueCodeableConcept as (coding as (code as string, display as string, system as string)[]))[],",
+						"          communication as (language as (text as string), preferred as boolean)[],",
 						"          gender as string,",
 						"          id as short,",
-						"          identifier as (period as (start as string), system as string, use as string, value as string)[],",
+						"          identifier as (period as (end as string, start as string), system as string, use as string, value as string)[],",
 						"          meta as (lastUpdated as string, profile as string[], source as string, versionId as short),",
-						"          name as (family as string, given as string[], text as string, use as string)[],",
+						"          name as (text as string, use as string)[],",
 						"          resourceType as string,",
-						"          telecom as (period as (start as string), system as string, use as string, value as string)[],",
+						"          telecom as (period as (end as string, start as string), system as string, use as string, value as string)[],",
 						"          text as (div as string, status as string)",
 						"     ),",
 						"     useSchema: false,",
@@ -2709,9 +2727,8 @@
 						"     ignoreNoFilesFound: false,",
 						"     format: 'json',",
 						"     fileSystem: 'fhir',",
-						"     folderPath: 'fhir.psi-mis.org/Patient',",
-						"     fileName: (concat(toString($date), '.json')),",
-						"     documentForm: 'arrayOfDocuments') ~> srcPatient",
+						"     documentForm: 'arrayOfDocuments',",
+						"     wildcardPaths:[(concat('v1/fhir.vnm.psi-connect.org/',substring(toString($date),0,4),'/',substring(toString($date),5,2),'/','Patient/',toString($date),'*.json'))]) ~> srcPatient",
 						"srcPatient select(mapColumn(",
 						"          birthDate,",
 						"          gender,",
@@ -2766,7 +2783,7 @@
 						"     validateSchema: false,",
 						"     format: 'delimited',",
 						"     fileSystem: 'fhir',",
-						"     folderPath: (concat('fhir.psi-mis.org/Patient/',toString($date))),",
+						"     folderPath: (concat('v1/fhir.vnm.psi-connect.org/',substring(toString($date),0,4),'/',substring(toString($date),5,2),'/','Patient/',toString($date))),",
 						"     truncate: true,",
 						"     columnDelimiter: ',',",
 						"     escapeChar: '\\\\',",
@@ -2845,7 +2862,7 @@
 						"     format: 'json',",
 						"     fileSystem: 'fhir',",
 						"     documentForm: 'documentPerLine',",
-						"     wildcardPaths:[(concat('fhir.psi-mis.org/QuestionnaireResponse/',toString($date),'/*.json'))]) ~> srcQR",
+						"     wildcardPaths:[(concat('v1/fhir.vnm.psi-connect.org/',substring(toString($date),0,4),'/',substring(toString($date),5,2),'/','QuestionnaireResponse/',toString($date),'/*.json'))]) ~> srcQR",
 						"srcQR unpivot(output(",
 						"          valueType as string,",
 						"          value as string",
@@ -2886,7 +2903,7 @@
 						"     validateSchema: false,",
 						"     format: 'delimited',",
 						"     fileSystem: 'fhir',",
-						"     folderPath: (concat('fhir.psi-mis.org/QuestionnaireResponse/', toString($date),'/')),",
+						"     folderPath: (concat('v1/fhir.vnm.psi-connect.org/',substring(toString($date),0,4),'/',substring(toString($date),5,2),'/','QuestionnaireResponse/',toString($date),'/')),",
 						"     truncate: true,",
 						"     columnDelimiter: ',',",
 						"     escapeChar: '\\\\',",
