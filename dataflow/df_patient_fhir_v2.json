@@ -118,7 +118,7 @@
 				"     validateSchema: false,",
 				"     format: 'delimited',",
 				"     fileSystem: 'fhir',",
-				"     folderPath: (concat('fhir.psi-mis.org/Patient/',toString($date))),",
+				"     folderPath: (concat('v1/fhir.vnm.psi-connect.org/',substring(toString($date),0,4),'/',substring(toString($date),5,2),'/','Patient/',toString($date))),",
 				"     truncate: true,",
 				"     columnDelimiter: ',',",
 				"     escapeChar: '\\\\',",
