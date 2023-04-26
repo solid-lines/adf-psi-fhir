@@ -48,10 +48,6 @@
 		"ls_keys_vault_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://psilake-keys.vault.azure.net/"
-		},
-		"tr_daily_6pm_cet_properties_pl_execution_parameters_date": {
-			"type": "string",
-			"defaultValue": "@trigger().startTime"
 		}
 	},
 	"variables": {
@@ -2223,18 +2219,8 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Started",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "pl_execution",
-							"type": "PipelineReference"
-						},
-						"parameters": {
-							"date": "[parameters('tr_daily_6pm_cet_properties_pl_execution_parameters_date')]"
-						}
-					}
-				],
+				"runtimeState": "Stopped",
+				"pipelines": [],
 				"type": "ScheduleTrigger",
 				"typeProperties": {
 					"recurrence": {
@@ -2245,9 +2231,7 @@
 					}
 				}
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/pl_execution')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/tr_test')]",

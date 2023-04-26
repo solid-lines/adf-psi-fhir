@@ -6,16 +6,41 @@
 			"type": "string",
 			"metadata": "Data Factory name",
 			"defaultValue": "adf-psi-fhir"
-		},
-		"tr_daily_6pm_cet_properties_pl_execution_parameters_date": {
-			"type": "string",
-			"defaultValue": "@trigger().startTime"
 		}
 	},
 	"variables": {
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_fhir_resource_json')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_fhir_psi_mis_org",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"relativeURL": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation",
+						"relativeUrl": {
+							"value": "@split(dataset().relativeURL,'/fhir/')[1]",
+							"type": "Expression"
+						}
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": []
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/ds_sql_patient')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
@@ -1194,7 +1219,9 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_fhir_resource_json')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/pl_extract_patient')]",
@@ -2178,38 +2205,6 @@
 				"[concat(variables('factoryId'), '/pipelines/pl_extract_fhir_resources')]",
 				"[concat(variables('factoryId'), '/pipelines/pl_transform')]",
 				"[concat(variables('factoryId'), '/pipelines/pl_load_dwh')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/tr_daily_6pm_cet')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Started",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "pl_execution",
-							"type": "PipelineReference"
-						},
-						"parameters": {
-							"date": "[parameters('tr_daily_6pm_cet_properties_pl_execution_parameters_date')]"
-						}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Hour",
-						"interval": 24,
-						"startTime": "2022-10-22T18:00:00",
-						"timeZone": "Romance Standard Time"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/pl_execution')]"
 			]
 		}
 	]
