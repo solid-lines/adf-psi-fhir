@@ -85,7 +85,7 @@
 				"          id,",
 				"          lastUpdated,",
 				"          status,",
-				"          subject = patient_id,",
+				"          patient_id,",
 				"          outcomeSystem,",
 				"          outcomeCode,",
 				"          outcomeDisplay,",
