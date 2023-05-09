@@ -18,15 +18,15 @@
 						"referenceName": "ls_adls_development",
 						"type": "LinkedServiceReference"
 					},
-					"name": "sink1"
+					"name": "sinkRiskAssessment"
 				}
 			],
 			"transformations": [
 				{
-					"name": "flatten1"
+					"name": "flattenPredictions"
 				},
 				{
-					"name": "derivedColumn1"
+					"name": "derivedColumn"
 				}
 			],
 			"scriptLines": [
@@ -54,16 +54,19 @@
 				"          id,",
 				"          lastUpdated = meta.lastUpdated,",
 				"          status,",
-				"          subject = subject.reference,",
+				"          patient_id = subject.reference,",
 				"          outcomeSystem = prediction.outcome.coding.system,",
 				"          outcomeCode = prediction.outcome.coding.code,",
 				"          outcomeDisplay = prediction.outcome.coding.display,",
 				"          probabilityDecimal = prediction.probabilityDecimal",
 				"     ),",
 				"     skipDuplicateMapInputs: false,",
-				"     skipDuplicateMapOutputs: false) ~> flatten1",
-				"flatten1 derive(subject = split(subject,'/')[2]) ~> derivedColumn1",
-				"derivedColumn1 sink(allowSchemaDrift: true,",
+				"     skipDuplicateMapOutputs: false) ~> flattenPredictions",
+				"flattenPredictions derive(patient_id = split(patient_id,'/')[2],",
+				"          outcomeSystem = outcomeSystem[1],",
+				"          outcomeCode = outcomeCode[1],",
+				"          outcomeDisplay = outcomeDisplay[1]) ~> derivedColumn",
+				"derivedColumn sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'delimited',",
 				"     fileSystem: 'fhir',",
@@ -77,7 +80,17 @@
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> sink1"
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          id,",
+				"          lastUpdated,",
+				"          status,",
+				"          subject = patient_id,",
+				"          outcomeSystem,",
+				"          outcomeCode,",
+				"          outcomeDisplay,",
+				"          probabilityDecimal",
+				"     )) ~> sinkRiskAssessment"
 			]
 		}
 	}
