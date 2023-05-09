@@ -1,5 +1,5 @@
 {
-	"name": "ds_sql_rist_assessment",
+	"name": "ds_sql_risk_assessment",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "ls_sql_prod",
@@ -54,7 +54,7 @@
 			}
 		],
 		"typeProperties": {
-			"schema": "dbo",
+			"schema": "",
 			"table": "RiskAssessment"
 		}
 	}
