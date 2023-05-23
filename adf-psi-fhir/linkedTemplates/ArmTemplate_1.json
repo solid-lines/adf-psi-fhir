@@ -174,6 +174,70 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ds_sql_risk_assessment')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_prod",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "id",
+						"type": "varchar"
+					},
+					{
+						"name": "birthDate",
+						"type": "date"
+					},
+					{
+						"name": "gender",
+						"type": "varchar"
+					},
+					{
+						"name": "lastUpdated",
+						"type": "date"
+					},
+					{
+						"name": "urn:facebook",
+						"type": "bit"
+					},
+					{
+						"name": "urn:zalo",
+						"type": "bit"
+					},
+					{
+						"name": "urn:google",
+						"type": "bit"
+					},
+					{
+						"name": "telecomPeriod",
+						"type": "varchar"
+					},
+					{
+						"name": "telecomSystem",
+						"type": "varchar"
+					},
+					{
+						"name": "telecomUse",
+						"type": "varchar"
+					},
+					{
+						"name": "telecomValue",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "",
+					"table": "RiskAssessment"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -932,6 +996,106 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/df_risk_assessment')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "ls_adls_raw",
+								"type": "LinkedServiceReference"
+							},
+							"name": "srcRiskAssessment"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "ls_adls_development",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sinkRiskAssessment"
+						}
+					],
+					"transformations": [
+						{
+							"name": "flattenPredictions"
+						},
+						{
+							"name": "derivedColumn"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     date as integer",
+						"}",
+						"source(output(",
+						"          id as short,",
+						"          meta as (lastUpdated as string, profile as string[], source as string, versionId as short),",
+						"          prediction as (outcome as (coding as (code as integer, display as string, system as string)[], text as string), probabilityDecimal as double)[],",
+						"          resourceType as string,",
+						"          status as string,",
+						"          subject as (reference as string)",
+						"     ),",
+						"     useSchema: false,",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'json',",
+						"     fileSystem: 'fhir',",
+						"     documentForm: 'arrayOfDocuments',",
+						"     wildcardPaths:[(concat('v1/fhir.vnm.psi-connect.org/',substring(toString($date),0,4),'/',substring(toString($date),5,2),'/','RiskAssessment/',toString($date),'*.json'))]) ~> srcRiskAssessment",
+						"srcRiskAssessment foldDown(unroll(prediction),",
+						"     mapColumn(",
+						"          id,",
+						"          lastUpdated = meta.lastUpdated,",
+						"          status,",
+						"          patient_id = subject.reference,",
+						"          outcomeSystem = prediction.outcome.coding.system,",
+						"          outcomeCode = prediction.outcome.coding.code,",
+						"          outcomeDisplay = prediction.outcome.coding.display,",
+						"          probabilityDecimal = prediction.probabilityDecimal",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> flattenPredictions",
+						"flattenPredictions derive(patient_id = split(patient_id,'/')[2],",
+						"          outcomeSystem = outcomeSystem[1],",
+						"          outcomeCode = outcomeCode[1],",
+						"          outcomeDisplay = outcomeDisplay[1]) ~> derivedColumn",
+						"derivedColumn sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'fhir',",
+						"     folderPath: (concat('v1/fhir.vnm.psi-connect.org/',substring(toString($date),0,4),'/',substring(toString($date),5,2),'/','RiskAssessment/',toString($date))),",
+						"     truncate: true,",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     mapColumn(",
+						"          id,",
+						"          lastUpdated,",
+						"          status,",
+						"          patient_id,",
+						"          outcomeSystem,",
+						"          outcomeCode,",
+						"          outcomeDisplay,",
+						"          probabilityDecimal",
+						"     )) ~> sinkRiskAssessment"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/pl_extract_configuration')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -950,7 +1114,7 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"url": "https://fhir.vnm.psi-connect.org/fhir/$export?_type=Patient,QuestionnaireResponse",
+							"url": "https://fhir.vnm.psi-connect.org/fhir/$export?_type=Patient,QuestionnaireResponse,RiskAssessment",
 							"method": "GET",
 							"headers": {
 								"Prefer": "respond-async"
@@ -1781,6 +1945,75 @@
 								"parameters": {}
 							}
 						]
+					},
+					{
+						"name": "Copy RiskAssessment",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Copy Patient",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFolderPath": {
+										"value": "@concat('v1/fhir.vnm.psi-connect.org/',substring(pipeline().parameters.date,0,4),'/',substring(pipeline().parameters.date,4,2),'/','RiskAssessment/',pipeline().parameters.date)\n",
+										"type": "Expression"
+									},
+									"wildcardFileName": "*.csv",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"preCopyScript": "delete from RiskAssessment",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"tableOption": "autoCreate",
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_adls_development_risk_assessment_csv",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_sql_risk_assessment",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
 					}
 				],
 				"policy": {
@@ -1796,7 +2029,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/ds_sql_patient')]",
-				"[concat(variables('factoryId'), '/datasets/ds_sql_qr')]"
+				"[concat(variables('factoryId'), '/datasets/ds_sql_qr')]",
+				"[concat(variables('factoryId'), '/datasets/ds_sql_risk_assessment')]"
 			]
 		},
 		{
@@ -1916,6 +2150,41 @@
 							},
 							"traceLevel": "Fine"
 						}
+					},
+					{
+						"name": "df_risk_assessment",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_risk_assessment",
+								"type": "DataFlowReference",
+								"parameters": {
+									"date": {
+										"value": "@pipeline().parameters.date",
+										"type": "Expression"
+									}
+								},
+								"datasetParameters": {
+									"srcRiskAssessment": {},
+									"sinkRiskAssessment": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
 					}
 				],
 				"policy": {
@@ -1932,7 +2201,8 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/df_patient_fhir_v2')]",
 				"[concat(variables('factoryId'), '/dataflows/df_curating_qr')]",
-				"[concat(variables('factoryId'), '/dataflows/df_qr_flatten')]"
+				"[concat(variables('factoryId'), '/dataflows/df_qr_flatten')]",
+				"[concat(variables('factoryId'), '/dataflows/df_risk_assessment')]"
 			]
 		},
 		{
@@ -2083,128 +2353,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/dataflow1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pl_execution')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "pl_extract_configuration",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "pl_extract_configuration",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"date": {
-									"value": "@formatDateTime(pipeline().parameters.date,'yyyyMMdd')",
-									"type": "Expression"
-								}
-							}
-						}
-					},
-					{
-						"name": "pl_extract_fhir_resources",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "pl_extract_configuration",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "pl_extract_fhir_resources",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"date": {
-									"value": "@formatDateTime(pipeline().parameters.date,'yyyyMMdd')",
-									"type": "Expression"
-								}
-							}
-						}
-					},
-					{
-						"name": "pl_transform",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "pl_extract_fhir_resources",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "pl_transform",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"date": {
-									"value": "@formatDateTime(pipeline().parameters.date,'yyyyMMdd')",
-									"type": "Expression"
-								}
-							}
-						}
-					},
-					{
-						"name": "pl_load_dwh",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "pl_transform",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "pl_load_dwh",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"date": {
-									"value": "@formatDateTime(pipeline().parameters.date,'yyyyMMdd')",
-									"type": "Expression"
-								}
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"parameters": {
-					"date": {
-						"type": "string"
-					}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/pl_extract_configuration')]",
-				"[concat(variables('factoryId'), '/pipelines/pl_extract_fhir_resources')]",
-				"[concat(variables('factoryId'), '/pipelines/pl_transform')]",
-				"[concat(variables('factoryId'), '/pipelines/pl_load_dwh')]"
 			]
 		}
 	]
