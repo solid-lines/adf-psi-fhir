@@ -8,6 +8,9 @@
 				"pipelineReference": {
 					"referenceName": "pl_load_dwh",
 					"type": "PipelineReference"
+				},
+				"parameters": {
+					"date": "@trigger().startTime"
 				}
 			},
 			{
