@@ -35,9 +35,6 @@
 		"ls_keys_vault_properties_typeProperties_baseUrl": {
 			"value": "https://psilake-keys.vault.azure.net/"
 		},
-		"tr_daily_6pm_cet_properties_pl_load_dwh_parameters_date": {
-			"value": "@trigger().startTime"
-		},
 		"tr_daily_6pm_cet_properties_pl_execution_parameters_date": {
 			"value": "@trigger().startTime\t"
 		},

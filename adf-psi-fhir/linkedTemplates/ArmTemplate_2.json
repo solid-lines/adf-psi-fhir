@@ -7,10 +7,6 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "adf-psi-fhir"
 		},
-		"tr_daily_6pm_cet_properties_pl_load_dwh_parameters_date": {
-			"type": "string",
-			"defaultValue": "@trigger().startTime"
-		},
 		"tr_daily_6pm_cet_properties_pl_execution_parameters_date": {
 			"type": "string",
 			"defaultValue": "@trigger().startTime\t"
@@ -145,15 +141,6 @@
 				"annotations": [],
 				"runtimeState": "Started",
 				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "pl_load_dwh",
-							"type": "PipelineReference"
-						},
-						"parameters": {
-							"date": "[parameters('tr_daily_6pm_cet_properties_pl_load_dwh_parameters_date')]"
-						}
-					},
 					{
 						"pipelineReference": {
 							"referenceName": "pl_execution",

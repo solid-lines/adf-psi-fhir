@@ -49,10 +49,6 @@
 			"type": "string",
 			"defaultValue": "https://psilake-keys.vault.azure.net/"
 		},
-		"tr_daily_6pm_cet_properties_pl_load_dwh_parameters_date": {
-			"type": "string",
-			"defaultValue": "@trigger().startTime"
-		},
 		"tr_daily_6pm_cet_properties_pl_execution_parameters_date": {
 			"type": "string",
 			"defaultValue": "@trigger().startTime\t"
@@ -2486,15 +2482,6 @@
 				"pipelines": [
 					{
 						"pipelineReference": {
-							"referenceName": "pl_load_dwh",
-							"type": "PipelineReference"
-						},
-						"parameters": {
-							"date": "[parameters('tr_daily_6pm_cet_properties_pl_load_dwh_parameters_date')]"
-						}
-					},
-					{
-						"pipelineReference": {
 							"referenceName": "pl_execution",
 							"type": "PipelineReference"
 						},
@@ -2514,7 +2501,6 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/pl_load_dwh')]",
 				"[concat(variables('factoryId'), '/pipelines/pl_execution')]"
 			]
 		},
