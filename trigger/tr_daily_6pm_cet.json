@@ -6,15 +6,6 @@
 		"pipelines": [
 			{
 				"pipelineReference": {
-					"referenceName": "pl_load_dwh",
-					"type": "PipelineReference"
-				},
-				"parameters": {
-					"date": "@trigger().startTime"
-				}
-			},
-			{
-				"pipelineReference": {
 					"referenceName": "pl_execution",
 					"type": "PipelineReference"
 				},
